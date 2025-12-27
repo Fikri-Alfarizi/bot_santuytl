@@ -3,7 +3,7 @@ import userService from '../services/user.service.js';
 
 export const data = new SlashCommandBuilder()
     .setName('weekly')
-    .setDescription('Ambil bonus mingguan kamu');
+    .setDescription('[👤 Public] Klaim gaji mingguan');
 
 export async function execute(interaction) {
     const userId = interaction.user.id;
