@@ -9,15 +9,11 @@ import { checkAndPostNews } from './services/news.service.js';
 import { distributePassiveIncome } from './cron/passiveIncome.js';
 import { runAutoChat } from './services/autochat.service.js';
 
-// --- MUSIC FIX: Explicitly set FFMPEG Path & Audio Encryption ---
+// --- MUSIC FIX: Explicitly set FFMPEG Path ---
 import ffmpeg from 'ffmpeg-static';
-import * as sodium from 'libsodium-wrappers';
 
-// Force load sodium for Railway
-await sodium.ready;
 process.env.FFMPEG_PATH = ffmpeg;
 console.log(`🎵 FFmpeg Path set to: ${process.env.FFMPEG_PATH}`);
-console.log('🔐 Audio Encryption (Sodium) Loaded!');
 
 const app = express();
 const PORT = process.env.PORT || 3001;

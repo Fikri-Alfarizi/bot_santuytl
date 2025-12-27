@@ -1,6 +1,11 @@
 import { Client, GatewayIntentBits } from 'discord.js';
 import { Player } from 'discord-player';
 import { DefaultExtractors } from '@discord-player/extractor';
+import * as sodium from 'libsodium-wrappers';
+
+// FORCE LOAD AUDIO ENCRYPTION LIB BEFORE ANYTHING ELSE
+await sodium.ready;
+console.log('🔐 Audio Encryption (Sodium) Initialized inside config!');
 
 const client = new Client({
     intents: [
