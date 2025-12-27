@@ -3,6 +3,7 @@ import { Events, PermissionFlagsBits } from 'discord.js';
 import userService from '../services/user.service.js';
 import { logSystem } from '../utils/auditLogger.js';
 import { askGemini } from '../services/gemini.service.js';
+import trustService from '../services/trust.service.js';
 
 const userMessageCooldown = new Map();
 const userSpamTracking = new Map(); // { userId: { channels: Set(), startTime: timestamp } }
@@ -12,6 +13,13 @@ export default {
 
     async execute(message) {
         if (message.author.bot || !message.guild) return;
+
+        // --- 🔍 TRUST SCORE OBSERVER ---
+        // Monitor for spam/flooding behavior and deduct trust score passively
+        // Note: Real penalty logic is inside trustService.observeUserBehavior, we just report events here.
+        if (message.mentions.users.size > 5) {
+            trustService.observeUserBehavior(message.author.id, 'spam'); // Mass mention
+        }
 
         // --- 🤖 AI REPLY FEATURE ---
         // If user replies to the BOT, the bot should answer back contextually

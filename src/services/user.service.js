@@ -25,8 +25,8 @@ class UserService {
             leveledUp = true;
         }
 
-        db.prepare('UPDATE users SET xp = ?, level = ?, username = ? WHERE id = ?')
-            .run(newXp, newLevel, username, userId);
+        db.prepare('UPDATE users SET xp = ?, seasonal_xp = seasonal_xp + ?, level = ?, username = ? WHERE id = ?')
+            .run(newXp, amount, newLevel, username, userId);
 
         return { ...user, xp: newXp, level: newLevel, leveledUp };
     }

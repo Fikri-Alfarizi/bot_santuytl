@@ -4,7 +4,7 @@ import guildService from '../services/guild.service.js';
 
 export const data = new SlashCommandBuilder()
     .setName('spin')
-    .setDescription('Putar slot untuk dapatkan Game Premium Gratis (Max 2x/hari)');
+    .setDescription('[👤 Public] Putar slot untuk dapatkan Game Premium Gratis (Max 2x/hari)');
 
 export async function execute(interaction) {
     const userId = interaction.user.id;

@@ -4,7 +4,7 @@ import db from '../db/index.js';
 
 export const data = new SlashCommandBuilder()
     .setName('job')
-    .setDescription('Lamar pekerjaan baru');
+    .setDescription('[👤 Public] Lamar pekerjaan baru');
 
 export async function execute(interaction) {
     const user = db.prepare('SELECT job FROM users WHERE id = ?').get(interaction.user.id);

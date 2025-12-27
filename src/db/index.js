@@ -35,6 +35,7 @@ try {
     db.exec("ALTER TABLE users ADD COLUMN job TEXT DEFAULT 'Pengangguran'");
     db.exec("ALTER TABLE users ADD COLUMN daily_spins INTEGER DEFAULT 0");
     db.exec("ALTER TABLE users ADD COLUMN last_spin_time INTEGER DEFAULT 0");
+    db.exec("ALTER TABLE users ADD COLUMN seasonal_xp INTEGER DEFAULT 0");
 } catch (e) { /* Column exists */ }
 
 // Initialize Guild Settings Table (Updated)
@@ -66,6 +67,50 @@ db.exec(`
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         news_guid TEXT UNIQUE,
         created_at INTEGER DEFAULT (strftime('%s', 'now'))
+    )
+`);
+
+// --- BIG SERVER FEATURES TABLES ---
+
+// 1. Season System
+db.exec(`
+    CREATE TABLE IF NOT EXISTS seasons (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        season_number INTEGER,
+        name TEXT,
+        start_date INTEGER,
+        end_date INTEGER,
+        is_active INTEGER DEFAULT 1
+    )
+`);
+
+// 2. Reputation System (Social Credit)
+db.exec(`
+    CREATE TABLE IF NOT EXISTS reputation (
+        user_id TEXT PRIMARY KEY,
+        rep_points INTEGER DEFAULT 0,
+        last_given INTEGER DEFAULT 0
+    )
+`);
+
+// 3. Trust Score (Anti-Exploit)
+db.exec(`
+    CREATE TABLE IF NOT EXISTS trust_score (
+        user_id TEXT PRIMARY KEY,
+        score INTEGER DEFAULT 100,
+        reason TEXT
+    )
+`);
+
+// 4. Invite Tracking
+db.exec(`
+    CREATE TABLE IF NOT EXISTS invites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        inviter_id TEXT,
+        invited_id TEXT,
+        timestamp INTEGER,
+        is_valid INTEGER DEFAULT 1,
+        UNIQUE(inviter_id, invited_id)
     )
 `);
 

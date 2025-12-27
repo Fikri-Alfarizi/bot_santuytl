@@ -3,7 +3,7 @@ import userService from '../services/user.service.js';
 
 export const data = new SlashCommandBuilder()
     .setName('daily')
-    .setDescription('Ambil gaji harian kamu');
+    .setDescription('[👤 Public] Klaim gaji harian');
 
 export async function execute(interaction) {
     const userId = interaction.user.id;
