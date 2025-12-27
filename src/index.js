@@ -24,14 +24,14 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/', apiRoutes);
+app.use('/api', apiRoutes);
 
 // Health Check
-app.get('/status', (req, res) => {
-    res.json({ online: true, tag: client.user?.tag || 'Not Logged In' });
+app.get('/', (req, res) => {
+    res.send('SantuyTL Bot API is running!');
 });
 
-// Start Express
+// Start Express Server
 app.listen(PORT, () => {
     console.log(`HTTP API running on port ${PORT}`);
 });
@@ -39,8 +39,9 @@ app.listen(PORT, () => {
 client.once('ready', async () => {
     console.log(`🔥 Bot is ready! Logged in as ${client.user.tag}`);
 
-    // Register commands logic...
-    // ...
+    // Register commands logic via deploy-commands script usually, 
+    // but here we might just log readiness.
+    // Assuming commands are loaded via loadCommands below.
 
     // Schedule News Feed (Every 30 minutes)
     cron.schedule('*/30 * * * *', () => {
