@@ -10,7 +10,7 @@ const initializeGemini = () => {
             return null;
         }
         const genAI = new GoogleGenerativeAI(apiKey);
-        model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     }
     return model;
 };
@@ -43,7 +43,9 @@ export const askGemini = async (username, query, history = []) => {
         return response;
 
     } catch (error) {
-        console.error('Gemini Error:', error);
-        return "Aduh, otak gue lagi korslet. Coba bendtar lagi yak! 🤕";
+        console.error('⚠️ Gemini API Error:', error);
+        if (error.message.includes('429')) return "Waduh, kebanyakan mikir nih gue (Quota Limit). Tunggu bentar yak! ⏳";
+        if (error.message.includes('SAFETY')) return "Eits, pertanyaan lu terlalu bahaya buat gue jawab wkwk. Skip ah! 🚫";
+        return `Aduh, otak gue lagi korslet. Error: ${error.message} 🤕`;
     }
 };
