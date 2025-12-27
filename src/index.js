@@ -7,7 +7,6 @@ import { loadEvents } from './events/index.js';
 import cron from 'node-cron';
 import { checkAndPostNews } from './services/news.service.js';
 import { distributePassiveIncome } from './cron/passiveIncome.js';
-import { distributePassiveIncome } from './cron/passiveIncome.js';
 import { runAutoChat } from './services/autochat.service.js';
 
 // --- MUSIC FIX: Explicitly set FFMPEG Path ---
