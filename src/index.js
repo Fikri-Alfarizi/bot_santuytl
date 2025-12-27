@@ -1,3 +1,4 @@
+import './config/sodium.js'; // MUST BE FIRST
 import './config/env.js';
 import express from 'express';
 import client from './config/discord.js';
