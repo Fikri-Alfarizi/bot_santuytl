@@ -3,14 +3,18 @@ import voiceService from '../services/voice.service.js';
 
 export const data = new SlashCommandBuilder()
     .setName('join')
-    .setDescription('Suruh bot masuk ke voice channel kamu');
+    .setDescription('Suruh bot join ke voice channel tempatmu nongkrong');
 
 export async function execute(interaction) {
     const member = interaction.member;
     const voiceChannel = member.voice.channel;
 
     if (!voiceChannel) {
-        return await interaction.reply({ content: '❌ Kamu harus masuk ke voice channel dulu!', ephemeral: true });
+        const errorEmbed = {
+            description: '❌ **Eits!** Kamu harus masuk ke Voice Channel dulu, baru bisa manggil aku. Jangan malu-malu!',
+            color: 0xFF0000
+        };
+        return await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
     }
 
     try {
@@ -18,9 +22,13 @@ export async function execute(interaction) {
 
         await voiceService.join(interaction.guild, voiceChannel.id);
 
-        await interaction.editReply({ content: `✅ Berhasil join ke **${voiceChannel.name}**! 🔊` });
+        const successEmbed = {
+            description: `✅ **Berhasil Mendarat!**\nAku udah join di **${voiceChannel.name}**. Ayo ngobrol atau dengerin lagu! 🎧`,
+            color: 0x00FF00
+        };
+        await interaction.editReply({ embeds: [successEmbed] });
     } catch (error) {
         console.error(error);
-        await interaction.editReply({ content: '❌ Gagal join voice channel.' });
+        await interaction.editReply('❌ **Gagal Join!** Kayaknya ada masalah teknis atau aku lagi dilarang masuk.');
     }
 }

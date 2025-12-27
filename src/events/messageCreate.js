@@ -39,7 +39,13 @@ export default {
                 const result = userService.addXp(message.author.id, message.author.username, xpToAdd);
 
                 if (result.leveledUp) {
-                    message.channel.send(`🎉 Selamat ${message.author}, kamu naik ke **Level ${result.level}**!`);
+                    const levelEmbed = {
+                        title: '🚀 **LEVEL UP ALERT!**',
+                        description: `Gokil! Selamat bro **${message.author.username}**, kamu naik level!\n\n⭐️ **Level Baru:** \`${result.level}\`\n🔥 **Total XP:** \`${result.xp}\`\n\n*Makin aktif, makin sepuh!*`,
+                        color: 0xFF00FF, // Neon Purple
+                        thumbnail: { url: message.author.displayAvatarURL({ dynamic: true }) }
+                    };
+                    message.channel.send({ content: `Congrats ${message.author}! 🎉`, embeds: [levelEmbed] });
                 }
 
             } catch (error) {
