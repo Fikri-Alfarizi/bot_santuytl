@@ -2,13 +2,13 @@ import axios from 'axios';
 import { Events, PermissionFlagsBits } from 'discord.js';
 import userService from '../services/user.service.js';
 import { logSystem } from '../utils/auditLogger.js';
+import { askGemini } from '../services/gemini.service.js';
 
 const userMessageCooldown = new Map();
 const userSpamTracking = new Map(); // { userId: { channels: Set(), startTime: timestamp } }
 
 export default {
     name: Events.MessageCreate,
-    import { askGemini } from '../services/gemini.service.js';
 
     async execute(message) {
         if (message.author.bot || !message.guild) return;
