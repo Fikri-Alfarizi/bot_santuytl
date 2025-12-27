@@ -1,14 +1,61 @@
 import axios from 'axios';
-import { Events } from 'discord.js';
+import { Events, PermissionFlagsBits } from 'discord.js';
 import userService from '../services/user.service.js';
 import { logSystem } from '../utils/auditLogger.js';
 
 const userMessageCooldown = new Map();
+const userSpamTracking = new Map(); // { userId: { channels: Set(), startTime: timestamp } }
 
 export default {
     name: Events.MessageCreate,
     async execute(message) {
         if (message.author.bot || !message.guild) return;
+
+        // --- 🛡️ ANTI-SPAM CROSS CHANNEL CHECK ---
+        const SPAM_WINDOW_MS = 15000; // 15 detik window
+        const MAX_CHANNELS = 3;
+
+        // Skip Admin/Mod from spam check
+        if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
+            const userId = message.author.id;
+            const now = Date.now();
+
+            if (!userSpamTracking.has(userId)) {
+                userSpamTracking.set(userId, { channels: new Set(), startTime: now });
+            }
+
+            const userData = userSpamTracking.get(userId);
+
+            // Reset warning window if expired
+            if (now - userData.startTime > SPAM_WINDOW_MS) {
+                userData.channels.clear();
+                userData.startTime = now;
+            }
+
+            userData.channels.add(message.channel.id);
+
+            // DETECT SPAM
+            if (userData.channels.size > MAX_CHANNELS) {
+                // Find Moderator Role
+                const modRole = message.guild.roles.cache.find(r =>
+                    r.name.toLowerCase().includes('mod') ||
+                    r.permissions.has(PermissionFlagsBits.KickMembers)
+                );
+                const modTag = modRole ? `<@&${modRole.id}>` : '@here';
+
+                try {
+                    await message.reply({
+                        content: `🚨 **WOI SANTAI DONG!** ${message.author} \nJangan nyepam di banyak channel sekaligus elah! Ganggu banget bjir. \n\n${modTag} tolong pantau bocah ini!`
+                    });
+
+                    // Reset tracking to prevent double warn immediately
+                    userSpamTracking.delete(userId);
+                    return; // Stop processing XP/Coins for spammer
+                } catch (e) {
+                    console.error('Failed to warn spammer:', e);
+                }
+            }
+        }
 
         // --- AFK CHECK LOGIC ---
         // 1. Check if sender is AFK -> Remove AFK
@@ -50,8 +97,8 @@ export default {
         const WEBHOOK_SECRET = process.env.DISCORD_BOT_SECRET;
         const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://127.0.0.1:8000';
 
-        const now = Date.now();
         const cooldownAmount = 60 * 1000;
+        const now = Date.now();
 
         let shouldReward = false;
         if (userMessageCooldown.has(message.author.id)) {
