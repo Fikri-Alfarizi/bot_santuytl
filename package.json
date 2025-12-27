@@ -13,6 +13,7 @@
     "deploy-commands": "node src/commands/index.js"
   },
   "dependencies": {
+    "@discord-player/extractor": "^7.1.0",
     "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.16.1",
     "@google/generative-ai": "^0.1.3",
