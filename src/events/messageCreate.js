@@ -72,6 +72,12 @@ export default {
                 // Add Coins Locally
                 userService.addCoins(message.author.id, message.author.username, coinsToAdd);
 
+                // 💸 CHAT REWARD NOTIFICATION
+                // Reply to user to notify reward (will appear in their notification tag)
+                message.reply(`💸 **Caching!** Kamu dapet **${coinsToAdd} coins** dari aktif ngechat!`)
+                    .then(msg => setTimeout(() => msg.delete(), 10000)) // Auto delete after 10s to reduce spam
+                    .catch(() => { });
+
                 // Add XP Locally
                 const result = userService.addXp(message.author.id, message.author.username, xpToAdd);
 
