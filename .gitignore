@@ -1,0 +1,29 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.input
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Data (SQLite)
+data/
+*.db
+*.sqlite
+
+# OS generated files
+.DS_Store
+Thumbs.db
