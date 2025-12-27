@@ -1,26 +1,14 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-let model = null;
-
-const initializeGemini = () => {
-    if (!model) {
-        const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            console.error('❌ GOOGLE_API_KEY or GEMINI_API_KEY is missing!');
-            return null;
-        }
-        const genAI = new GoogleGenerativeAI(apiKey);
-        model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    }
-    return model;
-};
+import axios from 'axios';
 
 export const askGemini = async (username, query, history = []) => {
     try {
-        const aiModel = initializeGemini();
-        if (!aiModel) return "Waduh, API Key gue ilang bro. Bilang admin suruh benerin env variable yak!";
+        const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+        if (!apiKey) return "Waduh, API Key gue ilang bro. Bilang admin suruh benerin env variable yak! (Missing API Key)";
 
-        // Construct Prompt with Persona
+        // Use v1beta API directly to access newer models like gemini-1.5-flash
+        const MODEL = "gemini-1.5-flash";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
+
         const prompt = `
         ROLE: Kamu adalah 'SantuyBot', teman ngobrol yang asik, gaul, dan pinter di server Discord ini.
         USER: ${username} bertanya: "${query}"
@@ -34,18 +22,43 @@ export const askGemini = async (username, query, history = []) => {
         - JANGAN pakai format [Role]: [Message]. Langsung jawab aja.
         `;
 
-        // Note: For now we just send the prompt. 
-        // Real multi-turn chat would require maintaining a chatSession object, 
-        // but for simple replies, one-shot prompt with context is easier for now.
+        const payload = {
+            contents: [{
+                parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+                maxOutputTokens: 800,
+                temperature: 0.9
+            }
+        };
 
-        const result = await aiModel.generateContent(prompt);
-        const response = result.response.text();
-        return response;
+        const response = await axios.post(API_URL, payload, {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 10000 // 10s timeout
+        });
+
+        if (response.data && response.data.candidates && response.data.candidates.length > 0) {
+            const reply = response.data.candidates[0].content.parts[0].text;
+            return reply;
+        }
+
+        return "Gemini diam seribu bahasa... (No candidates returned)";
 
     } catch (error) {
-        console.error('⚠️ Gemini API Error:', error);
-        if (error.message.includes('429')) return "Waduh, kebanyakan mikir nih gue (Quota Limit). Tunggu bentar yak! ⏳";
-        if (error.message.includes('SAFETY')) return "Eits, pertanyaan lu terlalu bahaya buat gue jawab wkwk. Skip ah! 🚫";
+        console.error('⚠️ Gemini API Error:', error.response ? error.response.data : error.message);
+
+        const errMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+
+        if (errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+            return "Waduh, kebanyakan mikir nih gue (Quota Limit). Tunggu bentar yak! ⏳";
+        }
+        if (errMsg.includes('SAFETY')) {
+            return "Eits, pertanyaan lu terlalu bahaya buat gue jawab wkwk. Skip ah! 🚫";
+        }
+        if (errMsg.includes('404')) {
+            return "Modelnya gak ketemu bro (404). Mungkin salah versi API. 🤕";
+        }
+
         return `Aduh, otak gue lagi korslet. Error: ${error.message} 🤕`;
     }
 };
