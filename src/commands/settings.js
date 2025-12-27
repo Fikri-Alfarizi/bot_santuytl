@@ -3,7 +3,7 @@ import guildService from '../services/guild.service.js';
 
 export const data = new SlashCommandBuilder()
     .setName('settings')
-    .setDescription('Konfigurasi fitur server (Admin Only)')
+    .setDescription('[👑 Admin] Konfigurasi fitur server')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand(sub =>
         sub.setName('welcome')
@@ -28,6 +28,10 @@ export const data = new SlashCommandBuilder()
     .addSubcommand(sub =>
         sub.setName('news')
             .setDescription('Set channel untuk berita game otomatis')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)))
+    .addSubcommand(sub =>
+        sub.setName('chat')
+            .setDescription('Set channel untuk Bot Gemini ngobrol otomatis')
             .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)));
 
 export async function execute(interaction) {
@@ -63,5 +67,10 @@ export async function execute(interaction) {
         const channel = interaction.options.getChannel('channel');
         guildService.updateSetting(guildId, 'news_channel_id', channel.id);
         await interaction.reply(`✅ **Game News Channel** berhasil diset ke ${channel}.\nBerita game terbaru (Steam & Scene) akan muncul otomatis di sini tiap 30 menit.`);
+    }
+    else if (subcommand === 'chat') {
+        const channel = interaction.options.getChannel('channel');
+        guildService.updateSetting(guildId, 'general_chat_channel_id', channel.id);
+        await interaction.reply(`✅ **AI Chat Channel** berhasil diset ke ${channel}.\nBot Gemini akan mulai nongkrong & ngobrol otomatis di sini jam 7, 12, 15, dan 21!`);
     }
 }

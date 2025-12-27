@@ -47,6 +47,7 @@ db.exec(`
         game_source_channel_id TEXT,
         request_channel_id TEXT,
         news_channel_id TEXT,
+        general_chat_channel_id TEXT,
         welcome_message TEXT DEFAULT 'Selamat datang {user} di {server}!',
         auto_role_id TEXT
     )
@@ -56,6 +57,7 @@ try {
     db.exec("ALTER TABLE guild_settings ADD COLUMN game_source_channel_id TEXT");
     db.exec("ALTER TABLE guild_settings ADD COLUMN request_channel_id TEXT");
     db.exec("ALTER TABLE guild_settings ADD COLUMN news_channel_id TEXT");
+    db.exec("ALTER TABLE guild_settings ADD COLUMN general_chat_channel_id TEXT");
 } catch (e) { /* Column exists */ }
 
 // News History to prevent duplicates

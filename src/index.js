@@ -7,6 +7,7 @@ import { loadEvents } from './events/index.js';
 import cron from 'node-cron';
 import { checkAndPostNews } from './services/news.service.js';
 import { distributePassiveIncome } from './cron/passiveIncome.js';
+import { runAutoChat } from './services/autochat.service.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -48,13 +49,28 @@ client.once('ready', async () => {
         checkAndPostNews(client);
     });
 
+    import { runAutoChat } from './services/autochat.service.js';
+
+    // ... (in client.ready or top imports)
+
     // Schedule Passive Income (Every 1 minute)
     cron.schedule('* * * * *', () => {
         distributePassiveIncome(client);
     });
 
+    // --- GEMINI AUTO CHAT SCHEDULES ---
+    // Jam 07:00 Pagi
+    cron.schedule('0 7 * * *', () => runAutoChat(client, 'Pagi'));
+    // Jam 12:00 Siang
+    cron.schedule('0 12 * * *', () => runAutoChat(client, 'Siang'));
+    // Jam 15:00 Sore
+    cron.schedule('0 15 * * *', () => runAutoChat(client, 'Sore'));
+    // Jam 21:00 Malam
+    cron.schedule('0 21 * * *', () => runAutoChat(client, 'Malam'));
+
     console.log('📰 News Feed System: ACTIVE');
-    console.log('💰 Passive Income System: ACTIVE (10 coins/min for online users)');
+    console.log('💰 Passive Income System: ACTIVE (60 coins/min ≈ 1 RP/sec for online users)');
+    console.log('🤖 Gemini Auto-Chat: ACTIVE (07:00, 12:00, 15:00, 21:00)');
 });
 
 // Initialize Discord Bot
