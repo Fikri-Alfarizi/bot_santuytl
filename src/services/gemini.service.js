@@ -5,9 +5,12 @@ export const askGemini = async (username, query, history = []) => {
         const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
         if (!apiKey) return "Waduh, API Key gue ilang bro. Bilang admin suruh benerin env variable yak! (Missing API Key)";
 
-        // Use v1beta API directly to access newer models like gemini-1.5-flash
+        // Use v1beta API
+        // Try 'gemini-1.5-flash' first. If this fails, we might need 'gemini-1.5-flash-latest'
         const MODEL = "gemini-1.5-flash";
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
+
+        // Use standard URL construction
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
         const prompt = `
         ROLE: Kamu adalah 'SantuyBot', teman ngobrol yang asik, gaul, dan pinter di server Discord ini.
@@ -33,8 +36,11 @@ export const askGemini = async (username, query, history = []) => {
         };
 
         const response = await axios.post(API_URL, payload, {
-            headers: { 'Content-Type': 'application/json' },
-            timeout: 10000 // 10s timeout
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+            },
+            timeout: 10000
         });
 
         if (response.data && response.data.candidates && response.data.candidates.length > 0) {
