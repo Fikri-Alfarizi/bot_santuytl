@@ -24,6 +24,10 @@ export const data = new SlashCommandBuilder()
     .addSubcommand(sub =>
         sub.setName('request')
             .setDescription('Set channel tempat user request game')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)))
+    .addSubcommand(sub =>
+        sub.setName('news')
+            .setDescription('Set channel untuk berita game otomatis')
             .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)));
 
 export async function execute(interaction) {
@@ -54,5 +58,10 @@ export async function execute(interaction) {
         const channel = interaction.options.getChannel('channel');
         guildService.updateSetting(guildId, 'request_channel_id', channel.id);
         await interaction.reply(`✅ **Request Channel** berhasil diset ke ${channel}.\nSemua request user akan masuk ke sini dengan tampilan keren!`);
+    }
+    else if (subcommand === 'news') {
+        const channel = interaction.options.getChannel('channel');
+        guildService.updateSetting(guildId, 'news_channel_id', channel.id);
+        await interaction.reply(`✅ **Game News Channel** berhasil diset ke ${channel}.\nBerita game terbaru (Steam & Scene) akan muncul otomatis di sini tiap 30 menit.`);
     }
 }

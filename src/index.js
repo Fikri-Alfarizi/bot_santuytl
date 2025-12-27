@@ -4,6 +4,8 @@ import client from './config/discord.js';
 import apiRoutes from './api/index.js';
 import { loadCommands } from './commands/index.js';
 import { loadEvents } from './events/index.js';
+import cron from 'node-cron';
+import { checkAndPostNews } from './services/news.service.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -31,6 +33,20 @@ app.get('/status', (req, res) => {
 // Start Express
 app.listen(PORT, () => {
     console.log(`HTTP API running on port ${PORT}`);
+});
+
+client.once('ready', async () => {
+    console.log(`🔥 Bot is ready! Logged in as ${client.user.tag}`);
+
+    // Register commands logic...
+    // ...
+
+    // Schedule News Feed (Every 30 minutes)
+    cron.schedule('*/30 * * * *', () => {
+        checkAndPostNews(client);
+    });
+
+    console.log('📰 News Feed System: ACTIVE (Check every 30m)');
 });
 
 // Initialize Discord Bot
