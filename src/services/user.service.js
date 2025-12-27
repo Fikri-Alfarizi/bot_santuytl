@@ -44,6 +44,71 @@ class UserService {
     getLeaderboard(limit = 10) {
         return db.prepare('SELECT * FROM users ORDER BY level DESC, xp DESC LIMIT ?').all(limit);
     }
+
+    // --- REWARD SYSTEM ---
+
+    checkDaily(userId) {
+        const user = this.getUser(userId);
+        const now = Date.now();
+        const cooldown = 24 * 60 * 60 * 1000; // 24 hours
+        const lastDaily = user.last_daily || 0;
+
+        if (now - lastDaily < cooldown) {
+            return { available: false, remaining: cooldown - (now - lastDaily) };
+        }
+        return { available: true };
+    }
+
+    claimDaily(userId, username, amount) {
+        const check = this.checkDaily(userId);
+        if (!check.available) return false;
+
+        const now = Date.now();
+        this.addCoins(userId, username, amount);
+        db.prepare('UPDATE users SET last_daily = ? WHERE id = ?').run(now, userId);
+        return true;
+    }
+
+    checkWeekly(userId) {
+        const user = this.getUser(userId);
+        const now = Date.now();
+        const cooldown = 7 * 24 * 60 * 60 * 1000; // 7 days
+        const lastWeekly = user.last_weekly || 0;
+
+        if (now - lastWeekly < cooldown) {
+            return { available: false, remaining: cooldown - (now - lastWeekly) };
+        }
+        return { available: true };
+    }
+
+    claimWeekly(userId, username, amount) {
+        const check = this.checkWeekly(userId);
+        if (!check.available) return false;
+
+        const now = Date.now();
+        this.addCoins(userId, username, amount);
+        db.prepare('UPDATE users SET last_weekly = ? WHERE id = ?').run(now, userId);
+        return true;
+    }
+
+    // --- AFK SYSTEM ---
+
+    setAfk(userId, username, reason) {
+        this.getUser(userId, username); // Ensure user exists
+        const now = Date.now();
+        db.prepare('UPDATE users SET is_afk = 1, afk_reason = ?, afk_timestamp = ? WHERE id = ?')
+            .run(reason, now, userId);
+    }
+
+    removeAfk(userId) {
+        db.prepare('UPDATE users SET is_afk = 0, afk_reason = NULL, afk_timestamp = 0 WHERE id = ?')
+            .run(userId);
+    }
+
+    getAfkStatus(userId) {
+        const user = db.prepare('SELECT is_afk, afk_reason, afk_timestamp FROM users WHERE id = ?').get(userId);
+        return user || { is_afk: 0 };
+    }
 }
 
 export default new UserService();

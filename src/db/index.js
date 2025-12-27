@@ -19,8 +19,23 @@ db.exec(`
         xp INTEGER DEFAULT 0,
         level INTEGER DEFAULT 1,
         coins INTEGER DEFAULT 0,
-        last_daily INTEGER DEFAULT 0
+        last_daily INTEGER DEFAULT 0,
+        last_weekly INTEGER DEFAULT 0,
+        is_afk INTEGER DEFAULT 0,
+        afk_reason TEXT DEFAULT NULL,
+        afk_timestamp INTEGER DEFAULT 0
     )
 `);
+
+// Migration for existing tables (Try-Catch safe)
+try {
+    db.exec("ALTER TABLE users ADD COLUMN last_weekly INTEGER DEFAULT 0");
+} catch (e) { /* Column exists */ }
+
+try {
+    db.exec("ALTER TABLE users ADD COLUMN is_afk INTEGER DEFAULT 0");
+    db.exec("ALTER TABLE users ADD COLUMN afk_reason TEXT DEFAULT NULL");
+    db.exec("ALTER TABLE users ADD COLUMN afk_timestamp INTEGER DEFAULT 0");
+} catch (e) { /* Column exists */ }
 
 export default db;

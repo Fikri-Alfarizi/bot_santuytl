@@ -1,18 +1,55 @@
 import axios from 'axios';
+import { Events } from 'discord.js';
 import userService from '../services/user.service.js';
+import { logSystem } from '../utils/auditLogger.js';
 
 const userMessageCooldown = new Map();
 
 export default {
-    name: 'messageCreate',
+    name: Events.MessageCreate,
     async execute(message) {
         if (message.author.bot || !message.guild) return;
 
+        // --- AFK CHECK LOGIC ---
+        // 1. Check if sender is AFK -> Remove AFK
+        const senderAfk = userService.getAfkStatus(message.author.id);
+        if (senderAfk && senderAfk.is_afk) {
+            userService.removeAfk(message.author.id);
+
+            // Revert nickname if needed
+            if (message.member && message.member.manageable && message.member.nickname?.startsWith('[AFK] ')) {
+                const newNick = message.member.nickname.replace('[AFK] ', '');
+                await message.member.setNickname(newNick).catch(() => { });
+            }
+
+            const afkDuration = Date.now() - senderAfk.afk_timestamp;
+            const minutes = Math.floor(afkDuration / 60000);
+
+            message.reply(`👋 **Welcome back, ${message.author.username}!**\nKamu AFK selama ${minutes} menit. Status AFK dicabut.`)
+                .then(msg => setTimeout(() => msg.delete(), 5000))
+                .catch(() => { });
+        }
+
+        // 2. Check if mentioned users are AFK
+        if (message.mentions.users.size > 0) {
+            message.mentions.users.forEach(targetUser => {
+                const afkStatus = userService.getAfkStatus(targetUser.id);
+                if (afkStatus && afkStatus.is_afk) {
+                    const timeAgo = Math.floor(afkStatus.afk_timestamp / 1000);
+                    const embed = {
+                        description: `💤 **${targetUser.username} sedang AFK**\n📝 Alasan: ${afkStatus.afk_reason}\n⏳ Sejak: <t:${timeAgo}:R>`,
+                        color: 0x95A5A6
+                    };
+                    message.reply({ embeds: [embed] }).catch(() => { });
+                }
+            });
+        }
+
+        // --- EXISTING XP & COIN LOGIC ---
         const WEBHOOK_URL = process.env.WEBHOOK_URL;
         const WEBHOOK_SECRET = process.env.DISCORD_BOT_SECRET;
         const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://127.0.0.1:8000';
 
-        // --- Coin & XP System (LOCAL SQLITE) ---
         const now = Date.now();
         const cooldownAmount = 60 * 1000;
 
@@ -53,10 +90,7 @@ export default {
             }
         }
 
-        // --- Activity Logging (Keep Webhook if needed for website display, otherwise optional) ---
-        // If the user strictly wanted "lepas dari Laravel", we might remove this too.
-        // But let's keep it in a try-catch for "activity feed" if the Laravel app is up, 
-        // but suppress errors if it's down.
+        // --- Activity Logging ---
         if (WEBHOOK_URL) {
             axios.post(WEBHOOK_URL, {
                 discord_id: message.author.id,
@@ -67,20 +101,18 @@ export default {
             }).catch(() => { /* Ignore connection errors */ });
         }
 
-        // --- Meaningful Message Rewards & Role Sync (Simplified) ---
+        // --- Meaningful Message Rewards ---
         if (message.content.split(' ').length > 10) {
-            // Extra XP
             userService.addXp(message.author.id, message.author.username, 5);
         }
 
-        // --- Auto Sync Games & Events (Keep for now, but handle errors gracefully) ---
+        // --- Auto Sync Games & Events ---
         const GAME_CHANNEL_ID = process.env.DISCORD_GAME_CHANNEL_ID || '1391274558514004019';
         const EVENT_CHANNEL_ID = process.env.DISCORD_EVENT_CHANNEL_ID || '1439538769148772372';
         const API_GAME_URL = process.env.API_GAME_URL || `${LARAVEL_API_URL}/api/discord/game`;
         const API_EVENT_URL = process.env.API_EVENT_URL || `${LARAVEL_API_URL}/api/discord/event`;
 
         if (message.channel.id === GAME_CHANNEL_ID) {
-            // ... (sync logic kept but safely wrapped)
             const lines = message.content.split('\n');
             const title = lines[0] || 'Game Baru';
             const link = lines[1] || '';
@@ -105,5 +137,5 @@ export default {
                 title, date, description, image, discord_message_id: message.id
             }, { timeout: 3000 }).catch(() => { });
         }
-    },
+    }
 };
