@@ -8,8 +8,32 @@ const userSpamTracking = new Map(); // { userId: { channels: Set(), startTime: t
 
 export default {
     name: Events.MessageCreate,
+    import { askGemini } from '../services/gemini.service.js';
+
     async execute(message) {
         if (message.author.bot || !message.guild) return;
+
+        // --- 🤖 AI REPLY FEATURE ---
+        // If user replies to the BOT, the bot should answer back contextually
+        if (message.reference && message.reference.messageId) {
+            try {
+                const repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
+
+                // Check if the reply target is Me (The Bot)
+                if (repliedMessage.author.id === message.client.user.id) {
+                    await message.channel.sendTyping();
+
+                    // Simple "context": Just sending the new query for now
+                    // Improvement: We could send "Previous: [BotMsg] Current: [UserMsg]" to prompt
+                    const response = await askGemini(message.author.username, message.content);
+
+                    await message.reply(response);
+                    return; // Stop processing other logic (spam/xp) for AI chats? Optional.
+                }
+            } catch (error) {
+                console.error('Error handling reply context:', error);
+            }
+        }
 
         // --- 🛡️ ANTI-SPAM CROSS CHANNEL CHECK ---
         const SPAM_WINDOW_MS = 15000; // 15 detik window
