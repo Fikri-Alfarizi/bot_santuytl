@@ -7,6 +7,7 @@ import { loadEvents } from './events/index.js';
 import cron from 'node-cron';
 import { checkAndPostNews } from './services/news.service.js';
 import { distributePassiveIncome } from './cron/passiveIncome.js';
+import { startPresence } from './utils/presence.js';
 import { runAutoChat } from './services/autochat.service.js';
 
 const app = express();
@@ -39,6 +40,9 @@ app.listen(PORT, () => {
 
 client.once('ready', async () => {
     console.log(`🔥 Bot is ready! Logged in as ${client.user.tag}`);
+
+    // Start Rotating Presence
+    startPresence(client);
 
     // Schedule News Feed (Every 30 minutes)
     cron.schedule('*/30 * * * *', () => {
