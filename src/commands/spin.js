@@ -78,13 +78,24 @@ export async function execute(interaction) {
         // Hasil Akhir (Jackpot Effect visual aja, hadiah tetap dapet 1 random)
         const prizeMsg = validGames.random();
 
+        // Cek Image dari Attachment atau Embeds
+        let prizeImage = null;
+        if (prizeMsg.attachments.size > 0) {
+            prizeImage = prizeMsg.attachments.first().url;
+        } else if (prizeMsg.embeds.length > 0 && prizeMsg.embeds[0].image) {
+            prizeImage = prizeMsg.embeds[0].image.url;
+        } else if (prizeMsg.embeds.length > 0 && prizeMsg.embeds[0].thumbnail) {
+            prizeImage = prizeMsg.embeds[0].thumbnail.url;
+        }
+
         await msg.edit(`🎰 **JACKPOT!**\n💎 💎 💎\n\n🎉 **Selamat! Kamu dapat Game Premium!**\nCek DM kamu sekarang!`);
 
         // 6. Kirim Hadiah via DM
         const prizeEmbed = {
             title: '🎁 HADIAH SPIN PREMIUM',
-            description: `Selamat! Ini hadiah game kamu:\n\n**${prizeMsg.content}**\n\n*Screenshot jika perlu, pesan ini aman.*`,
+            description: `Selamat! Ini hadiah game kamu:\n\n${prizeMsg.content}\n\n*Screenshot jika perlu, pesan ini aman.*`,
             color: 0xFFD700,
+            image: prizeImage ? { url: prizeImage } : undefined,
             footer: { text: `Dari server: ${interaction.guild.name}` }
         };
 
