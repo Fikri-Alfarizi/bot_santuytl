@@ -3,9 +3,9 @@ import express from 'express';
 import client from './config/discord.js';
 import apiRoutes from './api/index.js';
 import { loadCommands } from './commands/index.js';
-import { loadEvents } from './events/index.js';
 import cron from 'node-cron';
 import { checkAndPostNews } from './services/news.service.js';
+import { distributePassiveIncome } from './cron/passiveIncome.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -46,7 +46,13 @@ client.once('ready', async () => {
         checkAndPostNews(client);
     });
 
-    console.log('📰 News Feed System: ACTIVE (Check every 30m)');
+    // Schedule Passive Income (Every 1 minute)
+    cron.schedule('* * * * *', () => {
+        distributePassiveIncome(client);
+    });
+
+    console.log('📰 News Feed System: ACTIVE');
+    console.log('💰 Passive Income System: ACTIVE (10 coins/min for online users)');
 });
 
 // Initialize Discord Bot
