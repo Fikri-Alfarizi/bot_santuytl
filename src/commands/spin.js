@@ -84,7 +84,7 @@ export async function execute(interaction) {
         const prizeEmbed = {
             title: '🎁 HADIAH SPIN PREMIUM',
             description: `Selamat! Ini hadiah game kamu:\n\n**${prizeMsg.content}**\n\n*Screenshot jika perlu, pesan ini aman.*`,
-            color: 0xGold,
+            color: 0xFFD700,
             footer: { text: `Dari server: ${interaction.guild.name}` }
         };
 
