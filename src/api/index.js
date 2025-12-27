@@ -1,5 +1,4 @@
 import express from 'express';
-import voiceRoutes from './voice.routes.js';
 import guildRoutes from './guild.routes.js';
 import userRoutes from './user.routes.js';
 import moderationRoutes from './moderation.routes.js';
@@ -7,7 +6,6 @@ import notifyRoutes from './notify.routes.js';
 
 const router = express.Router();
 
-router.use('/voice', voiceRoutes);
 router.use('/', guildRoutes); // endpoints like /guilds, /server-stats are often root in original
 router.use('/', userRoutes); // /users, /user-stats
 router.use('/', moderationRoutes); // /kick, /ban
