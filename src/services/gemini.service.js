@@ -7,7 +7,7 @@ export const askGemini = async (username, query, history = []) => {
 
         // Use v1beta API
         // Try 'gemini-1.5-flash' first. If this fails, we might need 'gemini-1.5-flash-latest'
-        const MODEL = "gemini-1.5-flash";
+        const MODEL = "gemini-2.5-flash";
 
         // Use standard URL construction
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
