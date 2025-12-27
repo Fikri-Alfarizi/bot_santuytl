@@ -3,6 +3,7 @@ import express from 'express';
 import client from './config/discord.js';
 import apiRoutes from './api/index.js';
 import { loadCommands } from './commands/index.js';
+import { loadEvents } from './events/index.js';
 import cron from 'node-cron';
 import { checkAndPostNews } from './services/news.service.js';
 import { distributePassiveIncome } from './cron/passiveIncome.js';
