@@ -4,6 +4,8 @@ Bot Discord kustom dengan database lokal (SQLite) untuk sistem XP/Economy, namun
 
 ## Fitur
 - **Standalone Economy**: Sistem XP, Level, dan Coins menggunakan database lokal (`data/santuy.db`).
+- **Job System**: Pilih pekerjaan dan bekerja untuk dapat gaji (`/job`, `/work`). 
+- **Premium Spin**: Gacha game premium gratis dari stok channel (`/spin`).
 - **Modular Structure**: Codebase terpisah (API, Commands, Events, Services).
 - **Express API**: Integrasi HTTP untuk menerima notifikasi dari Web/Laravel.
 - **Discord Voice**: Join/Leave dan status channel.
