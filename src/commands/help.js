@@ -12,24 +12,34 @@ export async function execute(interaction) {
         thumbnail: { url: interaction.client.user.displayAvatarURL() },
         fields: [
             {
-                name: '🏆 Season & Social System',
-                value: '`/season` - Cek Rank Musiman & Info Season\n`/rep` - Kasih respect ke player lain (Social Credit)\n`/trust` - Cek Trust Score & Status player\n`/invite` - Cek statistik invite kamu'
+                name: '🏆 Season & Rank',
+                value: '`/season` Info Season\n`/rep` Give Respect\n`/trust` Trust Score',
+                inline: true
             },
             {
-                name: '🤖 AI & Smart Assistant',
-                value: '`/ai <tanya>` - Chat langsung sama SantuyBot (v1beta)\n*Bisa juga reply pesan bot buat ngobrol lanjut.*'
+                name: '💸 Economy',
+                value: '`/job` Cari Cuan\n`/work` Alias Job\n`/daily` Lapor Harian',
+                inline: true
             },
             {
-                name: '💸 Economy & Jobs',
-                value: '`/job` - Kerja buat cari receh (Cooldown 1 jam)\n`/work` - Alias buat job\n`/daily` - Jatah preman harian\n`/weekly` - Gaji mingguan\n`/spin` - Judi slot (Awas ketagihan!)'
+                name: '🤖 AI Assistant',
+                value: '`/ai` Chat Gemini (v1beta)\n*Reply bot buat lanjut ngobrol.*',
+                inline: true
             },
             {
-                name: '🛡️ Moderation & Utilities',
-                value: '`/mod` - Kick/Ban/Timeout (Admin Only)\n`/settings` - Atur channel berita & welcome\n`/ping` - Cek latensi bot'
+                name: '🎢 Fun & Growth',
+                value: '`/spin` Lucky Wheel\n`/invite` Cek Invites\n`/weekly` Gaji Mingguan',
+                inline: true
+            },
+            {
+                name: '🛡️ Admin & Utils',
+                value: '`/mod` Moderation\n`/settings` Config\n`/ping` Cek Latency',
+                inline: false
             },
             {
                 name: '📢 Automated Systems',
-                value: '• **Passive Income:** 60 koin/menit buat yang online.\n• **News Feed:** Berita game auto-update.\n• **Trust Observer:** Bot mantau spammer otomatis.'
+                value: '• **Passive Income:** 60 koin/menit (Online)\n• **News Feed:** Berita game update tiap 30 menit.\n• **Trust Observer:** Bot auto-kick spammer.',
+                inline: false
             }
         ],
         footer: { text: 'SantuyTL System™ • Season 1' }
