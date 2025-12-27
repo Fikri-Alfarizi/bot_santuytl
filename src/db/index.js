@@ -38,4 +38,16 @@ try {
     db.exec("ALTER TABLE users ADD COLUMN afk_timestamp INTEGER DEFAULT 0");
 } catch (e) { /* Column exists */ }
 
+// Initialize Guild Settings Table
+db.exec(`
+    CREATE TABLE IF NOT EXISTS guild_settings (
+        guild_id TEXT PRIMARY KEY,
+        welcome_channel_id TEXT,
+        leave_channel_id TEXT,
+        log_channel_id TEXT,
+        welcome_message TEXT DEFAULT 'Selamat datang {user} di {server}!',
+        auto_role_id TEXT
+    )
+`);
+
 export default db;

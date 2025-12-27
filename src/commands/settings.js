@@ -1,0 +1,40 @@
+import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import guildService from '../services/guild.service.js';
+
+export const data = new SlashCommandBuilder()
+    .setName('settings')
+    .setDescription('Konfigurasi fitur server (Admin Only)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addSubcommand(sub =>
+        sub.setName('welcome')
+            .setDescription('Set channel welcome')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)))
+    .addSubcommand(sub =>
+        sub.setName('logs')
+            .setDescription('Set channel logs')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)))
+    .addSubcommand(sub =>
+        sub.setName('autorole')
+            .setDescription('Set auto role saat member join')
+            .addRoleOption(opt => opt.setName('role').setDescription('Role yang dikasih').setRequired(true)));
+
+export async function execute(interaction) {
+    const subcommand = interaction.options.getSubcommand();
+    const guildId = interaction.guild.id;
+
+    if (subcommand === 'welcome') {
+        const channel = interaction.options.getChannel('channel');
+        guildService.updateSetting(guildId, 'welcome_channel_id', channel.id);
+        await interaction.reply(`✅ **Welcome Channel** berhasil diset ke ${channel}`);
+    }
+    else if (subcommand === 'logs') {
+        const channel = interaction.options.getChannel('channel');
+        guildService.updateSetting(guildId, 'log_channel_id', channel.id);
+        await interaction.reply(`✅ **Log Channel** berhasil diset ke ${channel}`);
+    }
+    else if (subcommand === 'autorole') {
+        const role = interaction.options.getRole('role');
+        guildService.updateSetting(guildId, 'auto_role_id', role.id);
+        await interaction.reply(`✅ **Auto Role** berhasil diset ke **${role.name}**`);
+    }
+}
