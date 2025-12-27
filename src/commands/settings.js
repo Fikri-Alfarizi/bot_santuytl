@@ -16,7 +16,11 @@ export const data = new SlashCommandBuilder()
     .addSubcommand(sub =>
         sub.setName('autorole')
             .setDescription('Set auto role saat member join')
-            .addRoleOption(opt => opt.setName('role').setDescription('Role yang dikasih').setRequired(true)));
+            .addRoleOption(opt => opt.setName('role').setDescription('Role yang dikasih').setRequired(true)))
+    .addSubcommand(sub =>
+        sub.setName('gamesource')
+            .setDescription('Set channel sumber Game Premium (untuk /spin)')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel sumber game').setRequired(true)));
 
 export async function execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -36,5 +40,10 @@ export async function execute(interaction) {
         const role = interaction.options.getRole('role');
         guildService.updateSetting(guildId, 'auto_role_id', role.id);
         await interaction.reply(`✅ **Auto Role** berhasil diset ke **${role.name}**`);
+    }
+    else if (subcommand === 'gamesource') {
+        const channel = interaction.options.getChannel('channel');
+        guildService.updateSetting(guildId, 'game_source_channel_id', channel.id);
+        await interaction.reply(`✅ **Game Source** berhasil diset ke ${channel}.\nBot akan mengambil stok game dari chat di channel tersebut untuk fitur \`/spin\`.`);
     }
 }
