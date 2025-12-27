@@ -3,10 +3,12 @@ import db from '../db/index.js';
 export function distributePassiveIncome(client) {
     // console.log('[PASSIVE] Distributing income to online users...');
 
+    const REWARD_PER_MINUTE = 60; // 1 RP per second x 60
+
     // Prepare transaction for performance
-    const addCoinStmt = db.prepare('UPDATE users SET coins = coins + 10 WHERE id = ?');
+    const addCoinStmt = db.prepare(`UPDATE users SET coins = coins + ${REWARD_PER_MINUTE} WHERE id = ?`);
     const checkUserStmt = db.prepare('SELECT id FROM users WHERE id = ?');
-    const createUserStmt = db.prepare('INSERT INTO users (id, username, coins) VALUES (?, ?, 10)');
+    const createUserStmt = db.prepare(`INSERT INTO users (id, username, coins) VALUES (?, ?, ${REWARD_PER_MINUTE})`);
 
     const transaction = db.transaction((onlineUsers) => {
         for (const user of onlineUsers) {
@@ -40,7 +42,7 @@ export function distributePassiveIncome(client) {
 
         if (onlineUsers.length > 0) {
             transaction(onlineUsers);
-            // console.log(`[PASSIVE] Gave 10 coins to ${onlineUsers.length} online users.`);
+            // console.log(`[PASSIVE] Gave ${REWARD_PER_MINUTE} coins to ${onlineUsers.length} online users.`);
         }
     } catch (error) {
         console.error('[PASSIVE ERROR]', error);
