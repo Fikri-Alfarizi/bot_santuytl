@@ -40,18 +40,10 @@ app.listen(PORT, () => {
 client.once('ready', async () => {
     console.log(`🔥 Bot is ready! Logged in as ${client.user.tag}`);
 
-    // Register commands logic via deploy-commands script usually, 
-    // but here we might just log readiness.
-    // Assuming commands are loaded via loadCommands below.
-
     // Schedule News Feed (Every 30 minutes)
     cron.schedule('*/30 * * * *', () => {
         checkAndPostNews(client);
     });
-
-    import { runAutoChat } from './services/autochat.service.js';
-
-    // ... (in client.ready or top imports)
 
     // Schedule Passive Income (Every 1 minute)
     cron.schedule('* * * * *', () => {
