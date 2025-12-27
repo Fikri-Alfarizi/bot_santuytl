@@ -43,7 +43,8 @@ export async function execute(interaction) {
         const selectedJobId = i.values[0];
         const job = JOBS.find(j => j.id === selectedJobId);
 
-        db.prepare('UPDATE users SET job = ? WHERE id = ?').run(job.name, i.user.id);
+        // Store Job ID (cleaner), not name
+        db.prepare('UPDATE users SET job = ? WHERE id = ?').run(job.id, i.user.id);
 
         await i.update({
             content: `🎉 Selamat! Kamu sekarang bekerja sebagai **${job.name}**.\nGunakan \`/work\` untuk mulai cari duit!`,

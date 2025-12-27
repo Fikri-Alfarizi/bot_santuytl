@@ -12,7 +12,13 @@ export async function execute(interaction) {
 
     // Find job config by name (stored in DB as name, need to map back to ID or store ID preferably. Stored Name: "👨‍💻 Programmer")
     // Let's match roughly or improve DB storage. Assuming DB stores exact name from jobs.data.js
-    const jobConfig = JOBS.find(j => j.name === user?.job);
+    // Support new (ID) and old (Name) data formats
+    let jobConfig = JOBS.find(j => j.id === user?.job);
+
+    // Fallback search by name if ID match fails (for migrated data)
+    if (!jobConfig) {
+        jobConfig = JOBS.find(j => j.name === user?.job);
+    }
 
     if (!jobConfig) {
         return interaction.reply({ content: '❌ Kamu belum punya pekerjaan! Ketik `/job` dulu.', ephemeral: true });
