@@ -45,6 +45,7 @@ db.exec(`
         leave_channel_id TEXT,
         log_channel_id TEXT,
         game_source_channel_id TEXT,
+        request_channel_id TEXT,
         welcome_message TEXT DEFAULT 'Selamat datang {user} di {server}!',
         auto_role_id TEXT
     )
@@ -52,6 +53,7 @@ db.exec(`
 
 try {
     db.exec("ALTER TABLE guild_settings ADD COLUMN game_source_channel_id TEXT");
+    db.exec("ALTER TABLE guild_settings ADD COLUMN request_channel_id TEXT");
 } catch (e) { /* Column exists */ }
 
 export default db;

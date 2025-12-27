@@ -20,7 +20,11 @@ export const data = new SlashCommandBuilder()
     .addSubcommand(sub =>
         sub.setName('gamesource')
             .setDescription('Set channel sumber Game Premium (untuk /spin)')
-            .addChannelOption(opt => opt.setName('channel').setDescription('Channel sumber game').setRequired(true)));
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel sumber game').setRequired(true)))
+    .addSubcommand(sub =>
+        sub.setName('request')
+            .setDescription('Set channel tempat user request game')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)));
 
 export async function execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -45,5 +49,10 @@ export async function execute(interaction) {
         const channel = interaction.options.getChannel('channel');
         guildService.updateSetting(guildId, 'game_source_channel_id', channel.id);
         await interaction.reply(`✅ **Game Source** berhasil diset ke ${channel}.\nBot akan mengambil stok game dari chat di channel tersebut untuk fitur \`/spin\`.`);
+    }
+    else if (subcommand === 'request') {
+        const channel = interaction.options.getChannel('channel');
+        guildService.updateSetting(guildId, 'request_channel_id', channel.id);
+        await interaction.reply(`✅ **Request Channel** berhasil diset ke ${channel}.\nSemua request user akan masuk ke sini dengan tampilan keren!`);
     }
 }
