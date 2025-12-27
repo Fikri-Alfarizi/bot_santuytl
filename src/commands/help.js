@@ -2,72 +2,38 @@ import { SlashCommandBuilder } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Panduan lengkap fitur bot biar kamu gak bingung');
+    .setDescription('Panduan lengkap semua fitur SantuyTL');
 
 export async function execute(interaction) {
     const embed = {
-        title: '✨ **SANTUY TL BOT INTERFACE** ✨',
-        description: `Halo **${interaction.user.username}**! 👋\nSelamat datang di pusat bantuan **SantuyTL**. Di sini kamu bisa cek semua fitur kece yang bikin server ini makin hidup!\n\n> *Pake command dengan awalan \`/\` (slash) ya, jangan lupa!*`,
-        color: 0x00A8FF, // Vivid Blue
-        thumbnail: {
-            url: interaction.client.user.displayAvatarURL()
-        },
-        image: {
-            url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbm90eHhidjB3aHJudjR4aHJudjR4aHJudjR4aHJudjR4aHJudjR4eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L2r3K75qYf5Z6/giphy.gif'
-        },
+        title: '📘 SantuyTL System Manual',
+        description: 'Selamat datang di **SantuyTL**. Bot ini lebih dari sekadar command, ini adalah sistem ekosistem server ini.\n\n*Pilih kategori di bawah untuk melihat detail.*',
+        color: 0x5865F2,
+        thumbnail: { url: interaction.client.user.displayAvatarURL() },
         fields: [
             {
-                name: '🎮 **FUN & SERU-SERUAN**',
-                value: '`/meme` - Asupan meme segar\n`/poll` - Bikin voting biar demokratis\n`/wyr` - Mending mana? (Would You Rather)\n`/giphy` - Nyari GIF lucu\n`/joke` - Jokes bapak-bapak/receh\n`/quote` - Kata-kata hari ini',
-                inline: true
+                name: '🏆 Season & Social System',
+                value: '`/season` - Cek Rank Musiman & Info Season\n`/rep` - Kasih respect ke player lain (Social Credit)\n`/trust` - Cek Trust Score & Status player\n`/invite` - Cek statistik invite kamu'
             },
             {
-                name: '🛠️ **TOOLS KEREN**',
-                value: '`/ping` - Cek koneksi bot ngebut gak\n`/say` - Bot jadi juru bicaramu\n`/urban` - Kamus bahasa gaul\n`/weather` - Cek cuaca biar gak kehujanan\n`/suggest` - Ada ide? Bisikin sini',
-                inline: true
+                name: '🤖 AI & Smart Assistant',
+                value: '`/ai <tanya>` - Chat langsung sama SantuyBot (v1beta)\n*Bisa juga reply pesan bot buat ngobrol lanjut.*'
             },
             {
-                name: '\u200b',
-                value: '\u200b',
-                inline: false
+                name: '💸 Economy & Jobs',
+                value: '`/job` - Kerja buat cari receh (Cooldown 1 jam)\n`/work` - Alias buat job\n`/daily` - Jatah preman harian\n`/weekly` - Gaji mingguan\n`/spin` - Judi slot (Awas ketagihan!)'
             },
             {
-                name: '📈 **STATISTIK & LEVEL**',
-                value: '`/leaderboard` - Cek siapa Sultan/Sepuh di sini\n`/profile` - Intip progress level kamu',
-                inline: true
+                name: '🛡️ Moderation & Utilities',
+                value: '`/mod` - Kick/Ban/Timeout (Admin Only)\n`/settings` - Atur channel berita & welcome\n`/ping` - Cek latensi bot'
             },
             {
-                name: '🎵 **MUSIK & VOICE**',
-                value: '`/join` - Suruh bot nemenin di voice\n`/leave` - Usir bot dari voice (kasar ya)',
-                inline: true
+                name: '📢 Automated Systems',
+                value: '• **Passive Income:** 60 koin/menit buat yang online.\n• **News Feed:** Berita game auto-update.\n• **Trust Observer:** Bot mantau spammer otomatis.'
             }
         ],
-        footer: {
-            text: 'SantuyTL System • Dibuat dengan ☕ & Cinta',
-            icon_url: interaction.guild.iconURL()
-        },
-        timestamp: new Date()
+        footer: { text: 'SantuyTL System™ • Season 1' }
     };
 
-    const row = {
-        type: 1,
-        components: [
-            {
-                type: 2,
-                style: 5,
-                label: '🌐 Website Resmi',
-                url: 'https://santuytl.com',
-                emoji: '🔗'
-            },
-            {
-                type: 2,
-                style: 5,
-                label: '📷 Instagram',
-                url: 'https://instagram.com/fikrizenterprise',
-                emoji: '📸'
-            }
-        ]
-    };
-
-    await interaction.reply({ embeds: [embed], components: [row] });
+    return interaction.reply({ embeds: [embed] });
 }
