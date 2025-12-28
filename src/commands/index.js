@@ -49,20 +49,12 @@ if (process.argv[1] === __filename) {
                 process.exit(1);
             }
 
-            // Prefer Guild command for development if GUILD_ID is present
-            if (guildId) {
-                console.log(`Deploying to guild: ${guildId}`);
-                await rest.put(
-                    Routes.applicationGuildCommands(clientId, guildId),
-                    { body: commands },
-                );
-            } else {
-                console.log('Deploying globally.');
-                await rest.put(
-                    Routes.applicationCommands(clientId),
-                    { body: commands },
-                );
-            }
+            // Deploy globally by default for multi-server accessibility
+            console.log('Deploying commands globally for all servers...');
+            await rest.put(
+                Routes.applicationCommands(clientId),
+                { body: commands },
+            );
 
             console.log('Successfully reloaded application (/) commands.');
         } catch (error) {
