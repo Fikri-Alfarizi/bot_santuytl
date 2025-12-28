@@ -26,6 +26,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use(express.static('public')); // Serve static files (Terms & Privacy)
 app.use('/api', apiRoutes);
 
 // Health Check
