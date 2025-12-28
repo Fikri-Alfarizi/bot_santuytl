@@ -6,18 +6,19 @@ export function distributePassiveIncome(client) {
     const REWARD_PER_MINUTE = 60; // 1 RP per second x 60
 
     // Prepare transaction for performance
-    const addCoinStmt = db.prepare(`UPDATE users SET coins = coins + ${REWARD_PER_MINUTE} WHERE id = ?`);
-    const checkUserStmt = db.prepare('SELECT id FROM users WHERE id = ?');
-    const createUserStmt = db.prepare(`INSERT INTO users (id, username, coins) VALUES (?, ?, ${REWARD_PER_MINUTE})`);
+    // Optimized UPSERT: Insert new user or update existing user's coins in one go
+    // This reduces DB calls by 50% (No SELECT needed)
+    const upsertStmt = db.prepare(`
+        INSERT INTO users (id, username, coins) 
+        VALUES (?, ?, ${REWARD_PER_MINUTE})
+        ON CONFLICT(id) DO UPDATE SET 
+        coins = coins + ${REWARD_PER_MINUTE},
+        username = excluded.username
+    `);
 
     const transaction = db.transaction((onlineUsers) => {
         for (const user of onlineUsers) {
-            const existing = checkUserStmt.get(user.id);
-            if (existing) {
-                addCoinStmt.run(user.id);
-            } else {
-                createUserStmt.run(user.id, user.username);
-            }
+            upsertStmt.run(user.id, user.username);
         }
     });
 
