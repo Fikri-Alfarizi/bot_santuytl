@@ -26,17 +26,16 @@ db.exec(`
         afk_timestamp INTEGER DEFAULT 0,
         job TEXT DEFAULT 'Pengangguran',
         daily_spins INTEGER DEFAULT 0,
-        last_spin_time INTEGER DEFAULT 0
+        last_spin_time INTEGER DEFAULT 0,
+        seasonal_xp INTEGER DEFAULT 0
     )
 `);
 
-// Migration for Job & Spin (Safe Try-Catch)
-try {
-    db.exec("ALTER TABLE users ADD COLUMN job TEXT DEFAULT 'Pengangguran'");
-    db.exec("ALTER TABLE users ADD COLUMN daily_spins INTEGER DEFAULT 0");
-    db.exec("ALTER TABLE users ADD COLUMN last_spin_time INTEGER DEFAULT 0");
-    db.exec("ALTER TABLE users ADD COLUMN seasonal_xp INTEGER DEFAULT 0");
-} catch (e) { /* Column exists */ }
+// Migration for Job & Spin (Each column in its own try-catch to prevent skipping)
+try { db.exec("ALTER TABLE users ADD COLUMN job TEXT DEFAULT 'Pengangguran'"); } catch (e) { /* Column exists */ }
+try { db.exec("ALTER TABLE users ADD COLUMN daily_spins INTEGER DEFAULT 0"); } catch (e) { /* Column exists */ }
+try { db.exec("ALTER TABLE users ADD COLUMN last_spin_time INTEGER DEFAULT 0"); } catch (e) { /* Column exists */ }
+try { db.exec("ALTER TABLE users ADD COLUMN seasonal_xp INTEGER DEFAULT 0"); } catch (e) { /* Column exists */ }
 
 // Initialize Guild Settings Table (Updated)
 db.exec(`
