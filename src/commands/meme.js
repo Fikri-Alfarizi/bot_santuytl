@@ -28,13 +28,15 @@ export async function execute(interaction) {
         }
 
         const selectedImages = images.slice(0, Math.min(count, images.length));
-        const embeds = selectedImages.map((img) => ({
-            image: { url: img }
+        const embeds = selectedImages.map((img, index) => ({
+            image: { url: img },
+            color: 0x00A8FF,
+            footer: { text: `Meme ${index + 1}/${selectedImages.length} • Requested by ${interaction.user.username}` }
         }));
 
         await interaction.editReply({ embeds: embeds });
     } catch (error) {
         console.error(error);
-        await interaction.editReply('Terjadi kesalahan saat mencari meme.');
+        await interaction.editReply('❌ **Meme tidak ditemukan!** Coba keyword lain.');
     }
 }

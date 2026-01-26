@@ -21,11 +21,19 @@ export async function execute(interaction) {
         color = 0xF1C40F;
     }
 
+    // Visual Gauge
+    const maxBars = 10;
+    const filledBars = Math.round((score / 100) * maxBars);
+    const emptyBars = maxBars - filledBars;
+    const bar = '🛡️'.repeat(filledBars) + '💀'.repeat(emptyBars);
+
     return interaction.reply({
         embeds: [{
-            title: `🕵️ Trust Score: ${targetUser.username}`,
-            description: `**Score:** \`${score}/100\`\n**Status:** **${status}**\n\n*Trust Score turun kalau sering spam atau coba exploit bot.*`,
-            color: color
+            title: `🕵️ **TRUST OBSERVER SYSTEM**`,
+            description: `Target: **${targetUser.username}**\n\n**STATUS: ${status}**\n${bar}\n\n📊 **Trust Score:** \`${score}/100\``,
+            color: color,
+            footer: { text: score < 50 ? '⚠️ Warning: User ini sering melanggar aturan.' : '✅ User ini aman dan terpercaya.' },
+            timestamp: new Date()
         }]
     });
 }

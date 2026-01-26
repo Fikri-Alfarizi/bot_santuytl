@@ -19,11 +19,16 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    const colors = [0xFFC312, 0xC4E538, 0x12CBC4, 0xFDA7DF, 0xED4C67]; // Pastel Palette
 
     const embed = {
-        color: 0x9B59B6,
-        description: `*"${randomQuote.text}"*`,
-        footer: { text: `~ ${randomQuote.author}` }
+        color: colors[Math.floor(Math.random() * colors.length)],
+        title: '📜 **DAILY WISDOM**',
+        description: `>>> " *${randomQuote.text}* "`, // Markdown block quote
+        fields: [
+            { name: ' ', value: `— **${randomQuote.author}**`, inline: false }
+        ],
+        footer: { text: 'Resapi, hayati, lupakan.', icon_url: interaction.user.displayAvatarURL() }
     };
 
     await interaction.reply({ embeds: [embed] });

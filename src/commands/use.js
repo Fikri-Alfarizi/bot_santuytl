@@ -1,78 +1,109 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType } from 'discord.js';
 import inventoryService from '../economy/inventory.service.js';
 import { getItemById } from '../economy/shop.items.js';
-import db from '../db/index.js'; // Direct DB for complex updates if needed (e.g. XP boost state)
 
 export const data = new SlashCommandBuilder()
     .setName('use')
-    .setDescription('Pakai item dari inventory')
-    .addStringOption(option =>
-        option.setName('item_id')
-            .setDescription('ID barang yang mau dipakai')
-            .setRequired(true));
+    .setDescription('Pakai item dari inventory tanpa ribet');
 
 export async function execute(interaction) {
-    await interaction.deferReply();
-
-    const itemId = interaction.options.getString('item_id');
     const userId = interaction.user.id;
+    const inventory = inventoryService.getUserInventory(userId);
 
-    if (!inventoryService.hasItem(userId, itemId)) {
-        return await interaction.editReply('❌ **Kamu gak punya barang ini!** Cek `/inventory` dulu.');
-    }
+    // Filter usable items? (Or just show all and handle usage logic)
+    // Let's filter distinct items to avoid duplicates in list, or map unique purchase IDs if we track individually.
+    // Inventory Service returns list of items. If 2 keys, 2 rows.
+    // For "Use", grouping by item_id is usually better unless unique metadata matters.
+    // Let's Group by Item ID for the menu.
+    const distinctItems = [];
+    const seen = new Set();
 
-    const itemDef = getItemById(itemId);
-    if (!itemDef) {
-        return await interaction.editReply('❌ **Item tidak dikenali sistem.**');
-    }
-
-    try {
-        // Logic pemakaian item
-        let successMessage = '';
-
-        switch (itemDef.type) {
-            case 'role':
-                if (itemDef.roleId) {
-                    const member = await interaction.guild.members.fetch(userId);
-                    await member.roles.add(itemDef.roleId);
-                    successMessage = `🎉 **Role Aktif!** Kamu sekarang punya role <@&${itemDef.roleId}> selama 7 hari.`;
-                } else {
-                    successMessage = '⚠️ Config role ID belum diset di `shop.items.js`. Hubungi admin.';
-                }
-                break;
-
-            case 'rename_bot':
-                // Logic rename bot (Requires permission)
-                successMessage = '⚙️ Fitur rename bot akan aktif! (Simulasi: Bot name changed)';
-                // In real app: await interaction.guild.members.me.setNickname(...)
-                break;
-
-            case 'xp_boost':
-                // Need a table for active_boosts, for now just consume
-                successMessage = '⚡ **XP Boost Aktif!** (Simulasi: XP gaining rate doubled)';
-                break;
-
-            default:
-                successMessage = `✅ **${itemDef.name}** berhasil dipakai!`;
-                break;
+    for (const inv of inventory) {
+        if (!seen.has(inv.item_id)) {
+            const def = getItemById(inv.item_id);
+            if (def) {
+                distinctItems.push({ ...inv, def });
+                seen.add(inv.item_id);
+            }
         }
-
-        // Konsumsi item (hapus dari inventory)
-        // Note: For timed items like Roles, we usually KEEP the record but check 'expires_at'. 
-        // If 'expires_at' was set during BUY, then we don't need to "consume" it here unless it's a consumable potion.
-        // BUT, looking at buy logic, we set expiresAt.
-        // IF the item is "Activate to use" (like potion), we consume it.
-        // IF the item is "Passive duration" (like role), it automtaically activates on buy (usually).
-        // Let's assume /use is for consumable one-time effects or creating the effect.
-
-        // For simplicity: We consume "consumables", but "duration" items might just show status.
-        // Let's assume we consume one stack of the item.
-        inventoryService.useItem(userId, itemId);
-
-        await interaction.editReply(successMessage);
-
-    } catch (error) {
-        console.error(error);
-        await interaction.editReply('❌ **Gagal pakai item!** Ada masalah teknis.');
     }
+
+    if (distinctItems.length === 0) {
+        return interaction.reply({ content: '🎒 **Tas kamu kosong!** Gak ada yang bisa dipakai.', ephemeral: true });
+    }
+
+    // Build Menu
+    const options = distinctItems.slice(0, 25).map(item => {
+        return new StringSelectMenuOptionBuilder()
+            .setLabel(item.def.name)
+            .setDescription(item.def.type === 'role' ? 'Pasang Role (Durasi)' : 'Gunakan item ini')
+            .setValue(item.item_id)
+            .setEmoji('⚡');
+    });
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId('use_select_item')
+        .setPlaceholder('Pilih item yang mau dipakai...')
+        .addOptions(options);
+
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+
+    const reply = await interaction.reply({
+        content: '🛠️ **Pilih item yang mau digunakan:**',
+        components: [row],
+        ephemeral: true,
+        fetchReply: true
+    });
+
+    const collector = reply.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 60000 });
+
+    collector.on('collect', async i => {
+        const itemId = i.values[0];
+        const itemDef = getItemById(itemId);
+
+        // Usage Logic
+        let successMessage = '';
+        try {
+            switch (itemDef.type) {
+                case 'role':
+                    if (itemDef.roleId) {
+                        const member = await i.guild.members.fetch(userId);
+                        await member.roles.add(itemDef.roleId);
+                        successMessage = `🎉 **ROLE DIPASANG!**\nKamu sekarang punya role <@&${itemDef.roleId}>.`;
+                    } else {
+                        successMessage = '⚠️ Config role bermasalah.';
+                    }
+                    break;
+                case 'xp_boost':
+                    successMessage = '⚡ **XP Boost Diaktifkan!** (Effect simulated)';
+                    break;
+                case 'premium_spin_ticket':
+                    successMessage = '🎟️ **Tiket ini otomatis dipakai di `/spin` Premium!** Gak perlu di-klik di sini.';
+                    // Don't consume here? Or consume? "Use" usually consumes.
+                    // If it's used in /spin, maybe warn user?
+                    // Let's return warning and NOT consume
+                    return i.update({ content: '🛑 **Salah Tempat!**\nTiket ini otomatis dipakai saat kamu ketik `/spin` dan pilih tombol Premium.', components: [] });
+                default:
+                    successMessage = `✅ **${itemDef.name}** berhasil dipakai!`;
+                    break;
+            }
+
+            // Consume
+            inventoryService.useItem(userId, itemId);
+
+            await i.update({
+                content: '',
+                embeds: [{
+                    title: '✅ **ITEM DIGUNAKAN**',
+                    description: successMessage,
+                    color: 0x00FF00
+                }],
+                components: []
+            });
+
+        } catch (e) {
+            console.error(e);
+            await i.update({ content: '❌ Gagal menggunakan item.', components: [] });
+        }
+    });
 }

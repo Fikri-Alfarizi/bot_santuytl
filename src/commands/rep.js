@@ -19,15 +19,31 @@ export async function execute(interaction) {
 
     if (subcommand === 'give') {
         if (targetUser.id === interaction.user.id) {
-            return interaction.reply({ content: 'Gak bisa kasih rep ke diri sendiri bang jago.', ephemeral: true });
+            return interaction.reply({ content: '🚫 **Self-Rep Error!** Narsis banget lu.', ephemeral: true });
         }
 
         const result = reputationService.giveReputation(interaction.user.id, targetUser.id);
 
         if (result.success) {
-            return interaction.reply(`✅ **Respect!** ${interaction.user} ngasih +1 Rep ke ${targetUser}.`);
+            // Animation
+            const msg = await interaction.reply({ content: `🤝 **Memberikan respect ke ${targetUser.username}...**`, fetchReply: true });
+            setTimeout(() => {
+                msg.edit({
+                    content: '',
+                    embeds: [{
+                        description: `✅ **RESPECT +1**\n\n${interaction.user} 🤜🤛 ${targetUser}\n*Reputasi mereka bertambah!*`,
+                        color: 0x00FF00
+                    }]
+                });
+            }, 1000);
         } else {
-            return interaction.reply({ content: `⏳ ${result.message}`, ephemeral: true });
+            return interaction.reply({
+                embeds: [{
+                    description: `⏳ **COOLDOWN!**\n${result.message}`,
+                    color: 0xFF0000
+                }],
+                ephemeral: true
+            });
         }
     }
 
@@ -36,9 +52,12 @@ export async function execute(interaction) {
 
         return interaction.reply({
             embeds: [{
-                title: `🛡️ Reputasi: ${targetUser.username}`,
-                description: `🌟 **Total Rep:** ${stats.rep_points}\n\n*Makin tinggi makin "diorangkan" di server ini.*`,
-                color: 0x3498DB
+                title: `🛡️ **SOCIAL CREDIT SCORE**`,
+                description: `**USER:** ${targetUser}\n\n🌟 **Total Reputation:** \`${stats.rep_points}\``,
+                thumbnail: { url: targetUser.displayAvatarURL() },
+                footer: { text: 'Terima kasih telah menjadi orang baik!' },
+                color: 0xF1C40F,
+                timestamp: new Date()
             }]
         });
     }

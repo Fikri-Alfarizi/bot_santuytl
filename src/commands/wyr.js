@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType } from 'discord.js';
 
 const wyrQuestions = [
     "Pilih mana: Bisa terbang tapi cuma setinggi 1 meter, atau bisa teleportasi tapi cooldown 10 jam?",
@@ -19,16 +19,46 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
     const randomQuestion = wyrQuestions[Math.floor(Math.random() * wyrQuestions.length)];
+    const [choiceA, choiceB] = randomQuestion.replace('Pilih mana: ', '').split(', atau ');
 
     const embed = {
         title: '🤔 **MENDING MANA? (WOULD YOU RATHER)**',
-        description: `> ${randomQuestion}`,
+        description: `**Pilihan A:** ${choiceA}\n\n*ATAU*\n\n**Pilihan B:** ${choiceB}`,
         color: 0xFFA500, // Orange
-        footer: { text: 'Pikir baik-baik sebelum jawab!' }
+        footer: { text: 'Klik tombol di bawah untuk voting!' }
     };
 
-    const sent = await interaction.reply({ embeds: [embed], fetchReply: true });
-    // Add reactions for voting
-    await sent.react('1️⃣');
-    await sent.react('2️⃣');
+    const btnA = new ButtonBuilder()
+        .setCustomId('wyr_a')
+        .setLabel('Pilihan A')
+        .setStyle(ButtonStyle.Primary);
+
+    const btnB = new ButtonBuilder()
+        .setCustomId('wyr_b')
+        .setLabel('Pilihan B')
+        .setStyle(ButtonStyle.Danger);
+
+    const row = new ActionRowBuilder().addComponents(btnA, btnB);
+
+    const sent = await interaction.reply({ embeds: [embed], components: [row], fetchReply: true });
+
+    // Collect votes (Demo: just reply interaction)
+    const collector = sent.createMessageComponentCollector({ componentType: ComponentType.Button, time: 30000 });
+
+    const votes = { a: 0, b: 0 };
+
+    collector.on('collect', async i => {
+        if (i.customId === 'wyr_a') votes.a++;
+        if (i.customId === 'wyr_b') votes.b++;
+
+        await i.reply({ content: `✅ Kamu memilih **${i.customId === 'wyr_a' ? 'Pilihan A' : 'Pilihan B'}**!`, ephemeral: true });
+    });
+
+    collector.on('end', () => {
+        sent.edit({
+            embeds: [embed],
+            components: [], // Remove buttons
+            content: `📊 **HASIL VOTING:**\n**A:** ${votes.a} Suara\n**B:** ${votes.b} Suara`
+        });
+    });
 }

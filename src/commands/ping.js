@@ -14,14 +14,16 @@ export async function execute(interaction) {
     if (latency > 500) status = '🐌 Lemot parah cuuuy!';
 
     const embed = {
-        color: latency < 200 ? 0x00FF00 : 0xFF0000,
-        title: '📶 **CONNECTION STATUS**',
+        color: latency < 200 ? 0x00FF00 : 0xE74C3C,
+        title: '📶 **NETWORK STATUS**',
+        description: `Status: **${status}**`,
         fields: [
-            { name: 'Bot Latency', value: `\`${latency}ms\``, inline: true },
-            { name: 'API Latency', value: `\`${wsPing}ms\``, inline: true }
+            { name: '🤖 Bot Latency', value: `\`${latency} ms\``, inline: true },
+            { name: '🌐 API Latency', value: `\`${wsPing} ms\``, inline: true }
         ],
-        footer: { text: status }
+        footer: { text: `Server Region: ${interaction.guild.preferredLocale}` },
+        timestamp: new Date()
     };
 
-    await interaction.editReply({ content: null, embeds: [embed] });
+    await interaction.editReply({ content: '', embeds: [embed] });
 }
