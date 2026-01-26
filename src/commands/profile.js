@@ -17,47 +17,54 @@ export async function execute(interaction) {
     const userData = userService.getUser(targetUser.id, targetUser.username);
     const member = await interaction.guild.members.fetch(targetUser.id);
 
-    // XP Logic
+    // Stats Calculations
     const xpNeeded = userData.level * 100;
-    const progress = Math.floor((userData.xp / xpNeeded) * 100);
+    const progress = Math.min(Math.floor((userData.xp / xpNeeded) * 100), 100);
 
-    // Visual Progress Bar
-    const barLength = 12;
-    const filled = Math.floor(progress / (100 / barLength));
-    const empty = barLength - filled;
-    const progressBar = '▰'.repeat(filled) + '▱'.repeat(empty);
+    // Visual Progress Bar (Text Based)
+    const barSize = 15;
+    const filled = Math.round((progress / 100) * barSize);
+    const empty = barSize - filled;
+    // Using special block characters for a smooth bar
+    const filledChar = '█';
+    const emptyChar = '░';
+    const progressBar = filledChar.repeat(filled) + emptyChar.repeat(empty);
+
+    // Dynamic Title Badge
+    let titleBadge = 'Anggota Teladan';
+    if (userData.level >= 50) titleBadge = '👑 LEGEND';
+    else if (userData.level >= 20) titleBadge = '🔥 ELITE';
+    else if (userData.level >= 10) titleBadge = '⭐ RISING STAR';
 
     const embed = {
-        title: `👤 **PROFIL MEMBER: ${targetUser.username.toUpperCase()}**`,
-        description: `Berikut adalah statistik pencapaian kamu di server **${interaction.guild.name}**. Terus aktif biar makin sepuh! 🚀`,
+        title: `👤 **IDENTITY CARD**`,
+        description: `**${targetUser.username.toUpperCase()}**\n*${titleBadge} of ${interaction.guild.name}*`,
         thumbnail: { url: targetUser.displayAvatarURL({ dynamic: true, size: 512 }) },
-        color: member.displayColor !== 0 ? member.displayColor : 0xFFD700, // Role color or Gold
-        image: {
-            url: 'https://placehold.co/600x100/2f3136/ACACAC.png?text=LEVEL+UP+YOUR+GAME&font=Montserrat' // Aesthetic spacer/banner optional
-        },
+        color: member.displayColor !== 0 ? member.displayColor : 0x00A8FF,
         fields: [
             {
-                name: '🏅 **LEVEL SAAT INI**',
-                value: `\`\`\`css\n[ ${userData.level} ]\`\`\``,
+                name: '💵 **ECONOMY**',
+                value: `>>> 💰 **Cash:** \`RP ${userData.coins.toLocaleString()}\`\n💎 **Asset:** \`Top Secret\``,
                 inline: true
             },
             {
-                name: '💰 **KEKAYAAN (COINS)**',
-                value: `\`\`\`yaml\nRP ${userData.coins.toLocaleString()}\`\`\``,
+                name: '⚔️ **RANKING**',
+                value: `>>> 🔰 **Level:** \`${userData.level}\`\n✨ **Total XP:** \`${userData.total_xp || userData.xp}\``,
                 inline: true
             },
             {
-                name: '✨ **PROGRESS NEXT LEVEL**',
-                value: `> **${userData.xp}** / ${xpNeeded} XP\n> \`[${progressBar}] ${progress}%\``,
+                name: '📈 **LEVEL PROGRESS**',
+                value: `\`${progressBar}\` **${progress}%**\n*Need ${xpNeeded - userData.xp} XP to Level up!*`,
                 inline: false
             },
             {
-                name: '📅 **JOIN SEJAK**',
-                value: `> <t:${Math.floor(member.joinedTimestamp / 1000)}:D> (<t:${Math.floor(member.joinedTimestamp / 1000)}:R>)`,
+                name: '📅 **MEMBERSHIP**',
+                value: `Joined: <t:${Math.floor(member.joinedTimestamp / 1000)}:D> (<t:${Math.floor(member.joinedTimestamp / 1000)}:R>)`,
                 inline: false
             }
         ],
-        footer: { text: `ID: ${targetUser.id} • SantuyTL Economy`, icon_url: interaction.guild.iconURL() }
+        footer: { text: `💳 ID: ${targetUser.id} • SantuyTL System`, icon_url: interaction.guild.iconURL() },
+        timestamp: new Date()
     };
 
     await interaction.editReply({ embeds: [embed] });

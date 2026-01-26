@@ -21,24 +21,36 @@ export async function execute(interaction) {
 
         const topThreeEmojis = ['👑', '🥈', '🥉'];
         const topList = users.map((stat, i) => {
-            const name = stat.username || 'Unknown Warrior';
-            const rankEmoji = i < 3 ? topThreeEmojis[i] : `\`#${i + 1}\``;
-            const highlight = i === 0 ? '**' : ''; // Bold for #1
+            const name = stat.username || 'Unknown';
+            const rankEmoji = i < 3 ? topThreeEmojis[i] : `\` #${i + 1} \``;
 
-            return `${rankEmoji} ${highlight}${name}${highlight}\n┗  Level ${stat.level} • ✨ ${stat.xp.toLocaleString()} XP`;
-        }).join('\n\n');
+            // Layout: Rank - Name - Stats
+            // Bold name for top 3
+            const formattedName = i < 3 ? `**${name.toUpperCase()}**` : name;
+
+            return `${rankEmoji} ${formattedName}\n\`\`\`yaml\nLevel: ${stat.level} | XP: ${stat.xp.toLocaleString()}\`\`\``;
+        }).join('\n');
+
+        // Find self rank
+        const selfRankIndex = users.findIndex(u => u.id === interaction.user.id);
+        const selfRankText = selfRankIndex !== -1
+            ? `🔥 Kamu peringkat #${selfRankIndex + 1}`
+            : '👀 Kamu belum masuk Top 10. Gas push rank!';
 
         const embed = {
             title: '🏆 **HALL OF FAME (TOP 10)**',
-            description: '*Mereka yang paling aktif, paling "no-life", dan paling sepuh di sini! Hormat!* 🫡\n\n' + topList,
+            description: '*Ranking ini diupdate secara realtime berdasarkan aktivitas sedunia (server).*',
             color: 0xFFD700, // Gold
             thumbnail: {
                 url: interaction.guild.iconURL({ dynamic: true })
             },
+            fields: [
+                { name: '🔥 **ELITE LEADERBOARD**', value: topList || 'Belum ada data' }
+            ],
             image: {
-                url: 'https://media.giphy.com/media/l46CimW38a7EQxMcM/giphy.gif' // Victory/Trophy GIF
+                url: 'https://media.giphy.com/media/l46CimW38a7EQxMcM/giphy.gif'
             },
-            footer: { text: 'SantuyTL Ranking System • Update Realtime' },
+            footer: { text: selfRankText },
             timestamp: new Date()
         };
 
