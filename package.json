@@ -8,7 +8,7 @@
     "node": ">=20.9.0"
   },
   "scripts": {
-    "start": "node src/index.js",
+    "start": "npm run deploy-commands && node src/index.js",
     "start:sharded": "node src/sharding.js",
     "dev": "nodemon src/index.js",
     "deploy-commands": "node src/commands/index.js"

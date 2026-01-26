@@ -49,7 +49,17 @@ if (process.argv[1] === __filename) {
                 process.exit(1);
             }
 
-            // Deploy globally by default for multi-server accessibility
+            // 1. Clear Guild-based commands (Fix for duplicates)
+            if (guildId) {
+                console.log(`Clearing guild commands for guild: ${guildId}...`);
+                await rest.put(
+                    Routes.applicationGuildCommands(clientId, guildId),
+                    { body: [] },
+                );
+                console.log('Successfully cleared guild commands.');
+            }
+
+            // 2. Deploy globally
             console.log('Deploying commands globally for all servers...');
             await rest.put(
                 Routes.applicationCommands(clientId),
