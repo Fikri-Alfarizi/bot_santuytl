@@ -13,6 +13,17 @@ db.exec(`
     )
 `);
 
+// Migration helper (Safe Alter)
+try {
+    db.exec("ALTER TABLE inventory ADD COLUMN metadata TEXT");
+} catch (e) { /* Ignore if exists */ }
+try {
+    db.exec("ALTER TABLE inventory ADD COLUMN expires_at INTEGER");
+} catch (e) { /* Ignore if exists */ }
+try {
+    db.exec("ALTER TABLE inventory ADD COLUMN created_at INTEGER DEFAULT (strftime('%s', 'now'))");
+} catch (e) { /* Ignore if exists */ }
+
 class InventoryService {
     /**
      * Add item to user inventory
@@ -31,18 +42,24 @@ class InventoryService {
      */
     getUserInventory(userId) {
         const now = Math.floor(Date.now() / 1000);
+        // Fallback to ORDER BY id if created_at is unreliable or missing in older rows
         const stmt = db.prepare(`
             SELECT * FROM inventory 
             WHERE user_id = ? 
             AND (expires_at IS NULL OR expires_at > ?)
-            ORDER BY created_at DESC
+            ORDER BY id DESC
         `);
 
         const items = stmt.all(userId, now);
-        return items.map(item => ({
-            ...item,
-            metadata: item.metadata ? JSON.parse(item.metadata) : null
-        }));
+        return items.map(item => {
+            let meta = null;
+            try {
+                if (item.metadata) meta = JSON.parse(item.metadata);
+            } catch (e) {
+                console.error(`Failed to parse metadata for item ${item.id}:`, e);
+            }
+            return { ...item, metadata: meta };
+        });
     }
 
     /**
