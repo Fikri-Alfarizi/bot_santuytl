@@ -3,48 +3,76 @@
  */
 
 export const SHOP_ITEMS = [
+    // --- CONSUMABLES ---
     {
-        id: 'role_vip',
-        name: '👑 VIP Role (7 Hari)',
-        description: 'Dapet role VIP selama 7 hari. Akses eksklusif!',
+        id: 'premium_spin_ticket',
+        name: '🎟️ Premium Spin Ticket',
+        description: 'Tiket untuk sekali putar SPIN PREMIUM! Hadiah lebih mantap.',
         price: 5000,
-        type: 'role',
-        duration: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
-        roleId: process.env.VIP_ROLE_ID || null
-    },
-    {
-        id: 'color_custom',
-        name: '🎨 Custom Color Role (3 Hari)',
-        description: 'Pilih warna sendiri untuk role kamu!',
-        price: 3000,
-        type: 'custom_color',
-        duration: 3 * 24 * 60 * 60 * 1000
+        type: 'consumable',
+        category: 'gacha'
     },
     {
         id: 'xp_boost',
         name: '⚡ Double XP (24 Jam)',
         description: 'XP kamu jadi 2x lipat selama 24 jam!',
-        price: 2000,
+        price: 15000,
         type: 'xp_boost',
         duration: 24 * 60 * 60 * 1000,
-        multiplier: 2
+        multiplier: 2,
+        category: 'boost'
     },
     {
         id: 'coin_boost',
         name: '💰 Double Coins (24 Jam)',
         description: 'Coins kamu jadi 2x lipat selama 24 jam!',
-        price: 2000,
+        price: 20000,
         type: 'coin_boost',
         duration: 24 * 60 * 60 * 1000,
-        multiplier: 2
+        multiplier: 2,
+        category: 'boost'
     },
+
+    // --- ROLES (Temporary) ---
+    {
+        id: 'role_vip',
+        name: '👑 VIP Role (7 Hari)',
+        description: 'Dapet role VIP selama 7 hari. Akses channel eksklusif + Chat beda warna!',
+        price: 50000,
+        type: 'role',
+        duration: 7 * 24 * 60 * 60 * 1000, // 7 days
+        roleId: process.env.VIP_ROLE_ID || null,
+        category: 'role'
+    },
+    {
+        id: 'role_sultan',
+        name: '💎 Sultan Role (30 Hari)',
+        description: 'Status SULTAN! Pamer ke member lain kalo lu kaya raya.',
+        price: 250000,
+        type: 'role',
+        duration: 30 * 24 * 60 * 60 * 1000,
+        roleId: process.env.SULTAN_ROLE_ID || null,
+        category: 'role'
+    },
+    {
+        id: 'color_custom',
+        name: '🎨 Custom Color Role (3 Hari)',
+        description: 'Pilih warna sendiri untuk role kamu!',
+        price: 10000,
+        type: 'custom_color',
+        duration: 3 * 24 * 60 * 60 * 1000,
+        category: 'role'
+    },
+
+    // --- UTILITY ---
     {
         id: 'rename_bot',
         name: '🤖 Rename Bot (1 Jam)',
         description: 'Ganti nama bot sesuai keinginan kamu (1 jam)',
-        price: 10000,
+        price: 75000,
         type: 'rename_bot',
-        duration: 60 * 60 * 1000
+        duration: 60 * 60 * 1000,
+        category: 'utility'
     }
 ];
 
