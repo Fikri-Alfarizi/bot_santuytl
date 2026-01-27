@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType } from 'discord.js';
+import { SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import inventoryService from '../economy/inventory.service.js';
 import { getItemById } from '../economy/shop.items.js';
 
@@ -10,11 +10,6 @@ export async function execute(interaction) {
     const userId = interaction.user.id;
     const inventory = inventoryService.getUserInventory(userId);
 
-    // Filter usable items? (Or just show all and handle usage logic)
-    // Let's filter distinct items to avoid duplicates in list, or map unique purchase IDs if we track individually.
-    // Inventory Service returns list of items. If 2 keys, 2 rows.
-    // For "Use", grouping by item_id is usually better unless unique metadata matters.
-    // Let's Group by Item ID for the menu.
     const distinctItems = [];
     const seen = new Set();
 
@@ -61,27 +56,106 @@ export async function execute(interaction) {
         const itemId = i.values[0];
         const itemDef = getItemById(itemId);
 
-        // Usage Logic
+        // Special handling for Custom Color
+        if (itemId === 'color_custom') {
+            const modal = new ModalBuilder()
+                .setCustomId(`color_modal_${itemId}`)
+                .setTitle('🎨 Atur Warna Role Kamu');
+
+            const colorInput = new TextInputBuilder()
+                .setCustomId('color_hex')
+                .setLabel("Masukkan Kode Hex (contoh: #FF0000)")
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder('#FF0000')
+                .setMaxLength(7)
+                .setMinLength(4)
+                .setRequired(true);
+
+            const row = new ActionRowBuilder().addComponents(colorInput);
+            modal.addComponents(row);
+
+            await i.showModal(modal);
+
+            // Wait for modal submit
+            try {
+                const submitted = await i.awaitModalSubmit({ time: 60000, filter: m => m.customId === `color_modal_${itemId}` && m.user.id === i.user.id });
+
+                const hexColor = submitted.fields.getTextInputValue('color_hex');
+                if (!/^#[0-9A-F]{6}$/i.test(hexColor)) {
+                    await submitted.reply({ content: '❌ **Format Salah!** Harus kode HEX valid (contoh: #FF0000). Coba lagi.', ephemeral: true });
+                    return;
+                }
+
+                const guild = i.guild;
+                const member = await guild.members.fetch(i.user.id);
+                const roleName = `Color-${i.user.username}`;
+
+                // Check if user already has a custom color role
+                let role = guild.roles.cache.find(r => r.name === roleName);
+
+                if (role) {
+                    await role.edit({ color: hexColor });
+                } else {
+                    role = await guild.roles.create({
+                        name: roleName,
+                        color: hexColor,
+                        position: guild.roles.highest.position - 5, // Attempt to put it high but safe
+                        reason: 'Custom Color Item Used'
+                    });
+                }
+
+                // Assign role if not already
+                if (!member.roles.cache.has(role.id)) {
+                    await member.roles.add(role);
+                }
+
+                // Consume Item
+                inventoryService.useItem(userId, itemId);
+
+                await submitted.reply({
+                    embeds: [{
+                        title: '🎨 **WARNA BERUBAH!**',
+                        description: `Role warna kamu **${hexColor}** berhasil dipasang!`,
+                        color: parseInt(hexColor.replace('#', ''), 16)
+                    }],
+                    components: []
+                });
+
+            } catch (err) {
+                console.error(err);
+                // If timeout or error, do nothing or user cancelled
+            }
+            return; // End flow for this item
+        }
+
+        // Generic Usage Logic
         let successMessage = '';
         try {
             switch (itemDef.type) {
                 case 'role':
                     if (itemDef.roleId) {
                         const member = await i.guild.members.fetch(userId);
+
+                        // Check if role exists in guild
+                        const role = i.guild.roles.cache.get(itemDef.roleId);
+                        if (!role) {
+                            return i.update({ content: `⚠️ **Error Config:** Role ID \`${itemDef.roleId}\` tidak ditemukan di server ini. Hubungi Admin.`, components: [] });
+                        }
+
+                        if (member.roles.cache.has(itemDef.roleId) && itemDef.duration === 0) {
+                            return i.update({ content: '⚠️ **Kamu sudah punya role permanen ini!**', components: [] });
+                        }
+
                         await member.roles.add(itemDef.roleId);
                         successMessage = `🎉 **ROLE DIPASANG!**\nKamu sekarang punya role <@&${itemDef.roleId}>.`;
                     } else {
-                        successMessage = '⚠️ Config role bermasalah.';
+                        successMessage = '⚠️ **Error Config:** Role ID belum disetting oleh Admin.';
                     }
                     break;
                 case 'xp_boost':
                     successMessage = '⚡ **XP Boost Diaktifkan!** (Effect simulated)';
                     break;
                 case 'premium_spin_ticket':
-                    successMessage = '🎟️ **Tiket ini otomatis dipakai di `/spin` Premium!** Gak perlu di-klik di sini.';
-                    // Don't consume here? Or consume? "Use" usually consumes.
-                    // If it's used in /spin, maybe warn user?
-                    // Let's return warning and NOT consume
                     return i.update({ content: '🛑 **Salah Tempat!**\nTiket ini otomatis dipakai saat kamu ketik `/spin` dan pilih tombol Premium.', components: [] });
                 default:
                     successMessage = `✅ **${itemDef.name}** berhasil dipakai!`;
