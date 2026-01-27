@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import inventoryService from '../economy/inventory.service.js';
+import userService from '../services/user.service.js';
 import { getItemById } from '../economy/shop.items.js';
 
 export const data = new SlashCommandBuilder()
