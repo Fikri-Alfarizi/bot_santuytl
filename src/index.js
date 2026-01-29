@@ -7,6 +7,7 @@ import { loadEvents } from './events/index.js';
 import cron from 'node-cron';
 import { checkAndPostNews } from './services/news.service.js';
 import { distributePassiveIncome } from './cron/passiveIncome.js';
+import { sendDailyAlarm } from './cron/dailyAlarm.js';
 import { startPresence } from './utils/presence.js';
 import { runAutoChat } from './services/autochat.service.js';
 
@@ -65,9 +66,15 @@ client.once('ready', async () => {
     // Jam 21:00 Malam
     cron.schedule('0 21 * * *', () => runAutoChat(client, 'Malam'));
 
+    // --- DAILY ALARM (7 AM Asia/Jakarta) ---
+    cron.schedule('0 7 * * *', () => sendDailyAlarm(client), {
+        timezone: 'Asia/Jakarta'
+    });
+
     console.log('📰 News Feed System: ACTIVE');
     console.log('💰 Passive Income System: ACTIVE (60 coins/min ≈ 1 RP/sec for online users)');
     console.log('🤖 Gemini Auto-Chat: ACTIVE (07:00, 12:00, 15:00, 21:00)');
+    console.log('🔔 Daily Alarm: ACTIVE (07:00 Asia/Jakarta)');
 });
 
 // Initialize Discord Bot
