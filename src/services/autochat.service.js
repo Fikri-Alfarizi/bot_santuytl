@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import guildService from '../services/guild.service.js';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 export async function runAutoChat(client, timeLabel) {
     console.log(`[AUTO-CHAT] Running for schedule: ${timeLabel}`);
