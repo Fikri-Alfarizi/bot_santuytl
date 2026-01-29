@@ -53,14 +53,28 @@ db.exec(`
     )
 `);
 
-try {
-    db.exec("ALTER TABLE guild_settings ADD COLUMN game_source_channel_id TEXT");
-    db.exec("ALTER TABLE guild_settings ADD COLUMN request_channel_id TEXT");
-    db.exec("ALTER TABLE guild_settings ADD COLUMN news_channel_id TEXT");
-    db.exec("ALTER TABLE guild_settings ADD COLUMN general_chat_channel_id TEXT");
-    db.exec("ALTER TABLE guild_settings ADD COLUMN alarm_channel_id TEXT");
-    db.exec("ALTER TABLE guild_settings ADD COLUMN alarm_schedule TEXT DEFAULT '07:00'");
-} catch (e) { /* Column exists */ }
+// Add missing columns individually with better error handling
+const columnsToAdd = [
+    { name: 'game_source_channel_id', sql: "ALTER TABLE guild_settings ADD COLUMN game_source_channel_id TEXT" },
+    { name: 'request_channel_id', sql: "ALTER TABLE guild_settings ADD COLUMN request_channel_id TEXT" },
+    { name: 'news_channel_id', sql: "ALTER TABLE guild_settings ADD COLUMN news_channel_id TEXT" },
+    { name: 'general_chat_channel_id', sql: "ALTER TABLE guild_settings ADD COLUMN general_chat_channel_id TEXT" },
+    { name: 'alarm_channel_id', sql: "ALTER TABLE guild_settings ADD COLUMN alarm_channel_id TEXT" },
+    { name: 'alarm_schedule', sql: "ALTER TABLE guild_settings ADD COLUMN alarm_schedule TEXT DEFAULT '07:00'" }
+];
+
+columnsToAdd.forEach(({ name, sql }) => {
+    try {
+        db.exec(sql);
+        console.log(`✅ Migration: Added column '${name}' to guild_settings`);
+    } catch (e) {
+        if (e.message.includes('duplicate column name')) {
+            // Column already exists, this is okay
+        } else {
+            console.error(`❌ Migration error for column '${name}':`, e.message);
+        }
+    }
+});
 
 // News History to prevent duplicates
 db.exec(`

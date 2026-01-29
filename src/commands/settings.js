@@ -43,6 +43,15 @@ export const data = new SlashCommandBuilder()
             .addStringOption(opt => opt.setName('jam').setDescription('Jam alarm (HH:MM)').setRequired(true)));
 
 export async function execute(interaction) {
+    // Check if command is used in a guild (not DM)
+    if (!interaction.guild) {
+        await interaction.reply({
+            content: '❌ Command ini hanya bisa digunakan di server, bukan DM!',
+            ephemeral: true
+        });
+        return;
+    }
+
     const subcommand = interaction.options.getSubcommand();
     const guildId = interaction.guild.id;
 
