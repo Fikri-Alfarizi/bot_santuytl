@@ -58,6 +58,8 @@ try {
     db.exec("ALTER TABLE guild_settings ADD COLUMN request_channel_id TEXT");
     db.exec("ALTER TABLE guild_settings ADD COLUMN news_channel_id TEXT");
     db.exec("ALTER TABLE guild_settings ADD COLUMN general_chat_channel_id TEXT");
+    db.exec("ALTER TABLE guild_settings ADD COLUMN alarm_channel_id TEXT");
+    db.exec("ALTER TABLE guild_settings ADD COLUMN alarm_schedule TEXT DEFAULT '07:00'");
 } catch (e) { /* Column exists */ }
 
 // News History to prevent duplicates

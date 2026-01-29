@@ -32,7 +32,15 @@ export const data = new SlashCommandBuilder()
     .addSubcommand(sub =>
         sub.setName('chat')
             .setDescription('Set channel untuk Bot Gemini ngobrol otomatis')
-            .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)));
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)))
+    .addSubcommand(sub =>
+        sub.setName('alarm-channel')
+            .setDescription('Set channel untuk alarm harian')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan').setRequired(true)))
+    .addSubcommand(sub =>
+        sub.setName('alarm-schedule')
+            .setDescription('Set jadwal alarm harian (format: HH:MM, contoh: 07:00)')
+            .addStringOption(opt => opt.setName('jam').setDescription('Jam alarm (HH:MM)').setRequired(true)));
 
 export async function execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -72,5 +80,21 @@ export async function execute(interaction) {
         const channel = interaction.options.getChannel('channel');
         guildService.updateSetting(guildId, 'general_chat_channel_id', channel.id);
         await interaction.reply(`✅ **AI Chat Channel** berhasil diset ke ${channel}.\nBot Gemini akan mulai nongkrong & ngobrol otomatis di sini jam 7, 12, 15, dan 21!`);
+    }
+    else if (subcommand === 'alarm-channel') {
+        const channel = interaction.options.getChannel('channel');
+        guildService.updateSetting(guildId, 'alarm_channel_id', channel.id);
+        await interaction.reply(`✅ **Alarm Channel** berhasil diset ke ${channel}.\nGambar alarm harian akan dikirim ke channel ini sesuai jadwal yang ditentukan!`);
+    }
+    else if (subcommand === 'alarm-schedule') {
+        const jam = interaction.options.getString('jam');
+        // Validate format HH:MM
+        const timeRegex = /^([0-1][0-9]|2[0-3]):([0-5][0-9])$/;
+        if (!timeRegex.test(jam)) {
+            await interaction.reply('❌ **Format jam salah!** Gunakan format HH:MM (contoh: 07:00, 08:30, 14:00)');
+            return;
+        }
+        guildService.updateSetting(guildId, 'alarm_schedule', jam);
+        await interaction.reply(`✅ **Jadwal Alarm** berhasil diset ke **${jam} WIB**.\nAlarm akan dikirim otomatis setiap hari pada jam tersebut!`);
     }
 }
