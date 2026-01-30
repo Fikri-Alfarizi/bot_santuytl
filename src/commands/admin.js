@@ -1,10 +1,10 @@
-import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ChannelSelectMenuBuilder, RoleSelectMenuBuilder, ComponentType, ChannelType, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ChannelSelectMenuBuilder, RoleSelectMenuBuilder, UserSelectMenuBuilder, ComponentType, ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import guildService from '../services/guild.service.js';
 
 export const data = new SlashCommandBuilder()
     .setName('admin')
     .setDescription('👑 One-Stop Admin Dashboard')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator); // Default restrict to admin, but logic will check owner/allowed roles
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 /**
  * Handle Slash Command /admin
@@ -45,13 +45,19 @@ async function showDashboard(interaction, isUpdate = false) {
         .setThumbnail(guild.iconURL());
 
     const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('admin_menu_settings').setLabel('⚙️ Settings').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('admin_menu_settings_1').setLabel('⚙️ Settings (Core)').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('admin_menu_settings_2').setLabel('🎮 Settings (Features)').setStyle(ButtonStyle.Primary),
         new ButtonBuilder().setCustomId('admin_menu_mod').setLabel('🛡️ Moderation').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId('admin_menu_access').setLabel('👮 Access Control').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId('admin_close').setLabel('❌ Close').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId('admin_menu_access').setLabel('👮 Access').setStyle(ButtonStyle.Secondary)
     );
 
-    const payload = { content: '', embeds: [embed], components: [row], ephemeral: true };
+    // Row 2 for Close/Refresh
+    const row2 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('admin_home').setLabel('🔄 Refresh').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('admin_close').setLabel('❌ Close').setStyle(ButtonStyle.Danger)
+    );
+
+    const payload = { content: '', embeds: [embed], components: [row, row2], ephemeral: true };
 
     if (isUpdate) {
         await interaction.update(payload);
@@ -61,61 +67,172 @@ async function showDashboard(interaction, isUpdate = false) {
 }
 
 /**
- * Settings Panel (Channel Configs)
+ * Settings Panel Page 1: Core Channels
  */
-async function showSettingsPanel(interaction) {
+async function showSettingsPanel1(interaction) {
     const settings = guildService.getSettings(interaction.guildId);
 
     const embed = new EmbedBuilder()
-        .setTitle('⚙️ SERVER SETTINGS')
-        .setDescription('Pilih channel untuk setiap fitur di bawah ini. Perubahan langsung tersimpan.')
+        .setTitle('⚙️ CORE SETTINGS (Page 1/2)')
+        .setDescription('Setting channel utama server. Perubahan langsung tersimpan.')
         .setColor(0x3498DB);
 
-    // Channel Selectors
-    // Discord limits: 5 rows max.
-
-    // Row 1: Welcome Channel
     const row1 = new ActionRowBuilder().addComponents(
         new ChannelSelectMenuBuilder()
             .setCustomId('admin_set_welcome')
-            .setPlaceholder('👋 Set Welcome Channel')
+            .setPlaceholder('👋 Welcome Channel')
             .setChannelTypes(ChannelType.GuildText)
             .setDefaultChannels(settings.welcome_channel_id ? [settings.welcome_channel_id] : [])
     );
 
-    // Row 2: Log Channel
     const row2 = new ActionRowBuilder().addComponents(
         new ChannelSelectMenuBuilder()
+            .setCustomId('admin_set_leave')
+            .setPlaceholder('👋 Leave Channel')
+            .setChannelTypes(ChannelType.GuildText)
+            .setDefaultChannels(settings.leave_channel_id ? [settings.leave_channel_id] : [])
+    );
+
+    const row3 = new ActionRowBuilder().addComponents(
+        new ChannelSelectMenuBuilder()
             .setCustomId('admin_set_log')
-            .setPlaceholder('📜 Set Log Channel')
+            .setPlaceholder('📜 Log Channel')
             .setChannelTypes(ChannelType.GuildText)
             .setDefaultChannels(settings.log_channel_id ? [settings.log_channel_id] : [])
     );
 
-    // Row 3: Level Up Channel
-    const row3 = new ActionRowBuilder().addComponents(
+    const row4 = new ActionRowBuilder().addComponents(
+        new ChannelSelectMenuBuilder()
+            .setCustomId('admin_set_general')
+            .setPlaceholder('💬 General Chat Channel')
+            .setChannelTypes(ChannelType.GuildText)
+            .setDefaultChannels(settings.general_chat_channel_id ? [settings.general_chat_channel_id] : [])
+    );
+
+    const rowNav = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('admin_home').setLabel('🏠 Home').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('admin_menu_settings_2').setLabel('➡️ Next Page').setStyle(ButtonStyle.Primary)
+    );
+
+    await interaction.update({ embeds: [embed], components: [row1, row2, row3, row4, rowNav] });
+}
+
+/**
+ * Settings Panel Page 2: Features
+ */
+async function showSettingsPanel2(interaction) {
+    const settings = guildService.getSettings(interaction.guildId);
+
+    const embed = new EmbedBuilder()
+        .setTitle('🎮 FEATURE SETTINGS (Page 2/2)')
+        .setDescription('Setting fitur bot. Perubahan langsung tersimpan.')
+        .setColor(0x9B59B6);
+
+    const row1 = new ActionRowBuilder().addComponents(
         new ChannelSelectMenuBuilder()
             .setCustomId('admin_set_levelup')
-            .setPlaceholder('🎉 Set Level Up & Coins Channel')
+            .setPlaceholder('🎉 Level Up & Coins Channel')
             .setChannelTypes(ChannelType.GuildText)
             .setDefaultChannels(settings.levelup_channel_id ? [settings.levelup_channel_id] : [])
     );
 
-    // Row 4: Game Source (Shared with /spin)
-    const row4 = new ActionRowBuilder().addComponents(
+    const row2 = new ActionRowBuilder().addComponents(
         new ChannelSelectMenuBuilder()
             .setCustomId('admin_set_gamesource')
-            .setPlaceholder('🎮 Set Game Source Channel')
+            .setPlaceholder('🎮 Game Premium Source')
             .setChannelTypes(ChannelType.GuildText)
             .setDefaultChannels(settings.game_source_channel_id ? [settings.game_source_channel_id] : [])
     );
 
-    // Row 5: Navigation
-    const row5 = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('admin_home').setLabel('🏠 Back to Home').setStyle(ButtonStyle.Secondary)
+    const row3 = new ActionRowBuilder().addComponents(
+        new ChannelSelectMenuBuilder()
+            .setCustomId('admin_set_request')
+            .setPlaceholder('🙏 Request Game Channel')
+            .setChannelTypes(ChannelType.GuildText)
+            .setDefaultChannels(settings.request_channel_id ? [settings.request_channel_id] : [])
     );
 
-    await interaction.update({ embeds: [embed], components: [row1, row2, row3, row4, row5] });
+    const row4 = new ActionRowBuilder().addComponents(
+        new ChannelSelectMenuBuilder()
+            .setCustomId('admin_set_alarm')
+            .setPlaceholder('⏰ Alarm Channel')
+            .setChannelTypes(ChannelType.GuildText)
+            .setDefaultChannels(settings.alarm_channel_id ? [settings.alarm_channel_id] : [])
+    );
+
+    // Auto Role (Role Select) - Special Case
+    const row5 = new ActionRowBuilder().addComponents(
+        new RoleSelectMenuBuilder()
+            .setCustomId('admin_set_autorole')
+            .setPlaceholder('🛡️ Set Auto Role (User Join)')
+        // Role select doesn't support Default Roles visually in builder API v14 same as channels? Checks docs. Yes it does.
+    );
+
+    const rowNav = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('admin_menu_settings_1').setLabel('⬅️ Prev Page').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('admin_home').setLabel('🏠 Home').setStyle(ButtonStyle.Secondary)
+    );
+
+    // Note: Discord allows 5 rows. We have 5 selects + 1 nav row = 6 rows. Too many.
+    // Solution: Move Auto Role (Role Select) to Page 3 or combine logic?
+    // Let's make Page 3 for "Roles & Others".
+
+    // Actually, let's keep it simple. Page 2 gets 4 selects (LevelUp, Game, Request, Alarm). 
+    // And Page 3 gets Auto Role + maybe Text Configs?
+
+    // To fit user request "keluarkan saja semua", I will make Row 5 Navigation.
+    // So Page 2 has 4 channel selects. Page 3 has Role + Text.
+
+    const rowNav2 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('admin_menu_settings_1').setLabel('⬅️ Prev').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('admin_menu_settings_3').setLabel('➡️ Next (Roles)').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('admin_home').setLabel('🏠 Home').setStyle(ButtonStyle.Secondary)
+    );
+
+    await interaction.update({ embeds: [embed], components: [row1, row2, row3, row4, rowNav2] });
+}
+
+/**
+ * Settings Panel Page 3: Roles & Text
+ */
+async function showSettingsPanel3(interaction) {
+    const settings = guildService.getSettings(interaction.guildId);
+
+    const embed = new EmbedBuilder()
+        .setTitle('🛡️ ROLE & TEXT SETTINGS (Page 3/3)')
+        .setDescription('Setting Role dan Text Message.')
+        .setColor(0xE67E22);
+
+    // Row 1: Auto Role Select
+    const row1 = new ActionRowBuilder().addComponents(
+        new RoleSelectMenuBuilder()
+            .setCustomId('admin_set_autorole')
+            .setPlaceholder('🛡️ Set Auto Role (User Join)')
+    );
+
+    // Row 2: Edit Welcome Message (Button to Modal)
+    const row2 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('admin_edit_chk_welcome').setLabel('📝 Edit Welcome Message').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('admin_edit_chk_alarm').setLabel('⏰ Edit Alarm Schedule').setStyle(ButtonStyle.Secondary)
+    );
+
+    // Status Display
+    const statusEmbed = {
+        title: 'Current Config',
+        fields: [
+            { name: 'Auto Role', value: settings.auto_role_id ? `<@&${settings.auto_role_id}>` : '*Not Set*', inline: true },
+            { name: 'Welcome Msg', value: settings.welcome_message ? `"${settings.welcome_message.substring(0, 50)}..."` : '*Default*', inline: true },
+            { name: 'Alarm', value: settings.alarm_schedule || '07:00', inline: true }
+        ],
+        color: 0x2B2D31
+    };
+
+    const rowNav = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('admin_menu_settings_2').setLabel('⬅️ Prev').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('admin_home').setLabel('🏠 Home').setStyle(ButtonStyle.Secondary)
+    );
+
+    await interaction.update({ embeds: [embed, statusEmbed], components: [row1, row2, rowNav] });
 }
 
 /**
@@ -159,30 +276,14 @@ async function showAccessPanel(interaction) {
 async function showModPanel(interaction) {
     const embed = new EmbedBuilder()
         .setTitle('🛡️ MODERATION PANEL')
-        .setDescription('Shortcut untuk tindakan moderasi.')
+        .setDescription('Pilih user di bawah untuk melakukan tindakan (Kick/Ban).')
         .setColor(0xE74C3C);
 
-    // Modals are triggered by buttons, but we can't easily do User Select -> Modal in one go without complex temporary collection.
-    // Simplest flow: Button -> Modal (Type User ID) OR Button -> User Select -> Immediate Action (Kick/Ban)
-
-    // Let's use User Select Menu for target
     const userSelect = new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder() // Placeholder explanation
-            .setCustomId('admin_mod_dummy')
-            .setPlaceholder('⬇️ Pilih Member di bawah untuk Kick/Ban')
-            .setOptions([{ label: 'Fitur ini segera hadir!', value: 'comming_soon' }])
-            .setDisabled(true)
+        new UserSelectMenuBuilder()
+            .setCustomId('admin_mod_select')
+            .setPlaceholder('Select User to Moderate...')
     );
-
-    // Note: Discord UserSelectMenu is available: UserSelectMenuBuilder
-    // But handling valid user input for moderation usually requires reason input. 
-    // Flow: Select User -> Modal (Reason) -> Action.
-
-    // For now, let's keep it simple: Just Buttons that reply with instructions or simple actions
-    // Or maybe list ban list? 
-    // Let's implement basic "Coming Soon" for now or simpler "Manage Bans"?
-    // User requested: "ban, kick ... bisa pilih mereka semua lalu apply". 
-    // Let's stick to simple UI first.
 
     const rowNav = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('admin_home').setLabel('🏠 Back to Home').setStyle(ButtonStyle.Secondary)
@@ -191,13 +292,35 @@ async function showModPanel(interaction) {
     await interaction.update({ embeds: [embed], components: [userSelect, rowNav] });
 }
 
+/**
+ * Handle Mod Action Selection (After user selected)
+ */
+async function showModAction(interaction, userId) {
+    // Only fetch member if feasible, or just show options
+    const member = await interaction.guild.members.fetch(userId).catch(() => null);
+    const username = member ? member.user.tag : userId;
+
+    const embed = new EmbedBuilder()
+        .setTitle(`🛡️ Action for: ${username}`)
+        .setDescription(`Apa yang ingin kamu lakukan pada <@${userId}>?`)
+        .setColor(0xE74C3C)
+        .setThumbnail(member ? member.user.displayAvatarURL() : null);
+
+    const rowActions = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`mod_kick_${userId}`).setLabel('🥾 Kick').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`mod_ban_${userId}`).setLabel('🔨 Ban').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`mod_to_${userId}`).setLabel('timeout 1h').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('admin_menu_mod').setLabel('🔙 Cancel').setStyle(ButtonStyle.Secondary)
+    );
+
+    await interaction.update({ embeds: [embed], components: [rowActions] });
+}
 
 /**
- * Central Interaction Handler for Admin Components
- * Called from interactionCreate.js
+ * Central Interaction Handler
  */
 export async function handleAdminInteraction(interaction) {
-    // Security Check
+    // Security
     if (!guildService.isAdmin(interaction)) {
         return interaction.reply({ content: '🚫 Access Denied.', ephemeral: true });
     }
@@ -206,41 +329,104 @@ export async function handleAdminInteraction(interaction) {
 
     // Navigation
     if (customId === 'admin_home') return showDashboard(interaction, true);
-    if (customId === 'admin_menu_settings') return showSettingsPanel(interaction);
+    if (customId === 'admin_close') return interaction.deleteReply();
+    if (customId === 'admin_menu_settings_1') return showSettingsPanel1(interaction);
+    if (customId === 'admin_menu_settings_2') return showSettingsPanel2(interaction);
+    if (customId === 'admin_menu_settings_3') return showSettingsPanel3(interaction);
     if (customId === 'admin_menu_mod') return showModPanel(interaction);
     if (customId === 'admin_menu_access') return showAccessPanel(interaction);
-    if (customId === 'admin_close') return interaction.deleteReply();
 
-    // Settings logic (Channel Selects)
+    // Channel Settings
     if (customId.startsWith('admin_set_')) {
         const settingKeyMap = {
             'admin_set_welcome': 'welcome_channel_id',
+            'admin_set_leave': 'leave_channel_id',
             'admin_set_log': 'log_channel_id',
+            'admin_set_general': 'general_chat_channel_id',
             'admin_set_levelup': 'levelup_channel_id',
-            'admin_set_gamesource': 'game_source_channel_id'
+            'admin_set_gamesource': 'game_source_channel_id',
+            'admin_set_request': 'request_channel_id',
+            'admin_set_alarm': 'alarm_channel_id',
+            'admin_set_autorole': 'auto_role_id'
         };
 
         const key = settingKeyMap[customId];
         if (key) {
-            const channelId = interaction.values[0];
-            guildService.updateSetting(interaction.guildId, key, channelId);
-            // Re-render panel to show updated state (Discord Select Menu default values update)
-            await showSettingsPanel(interaction);
+            const value = interaction.values[0];
+            guildService.updateSetting(interaction.guildId, key, value);
 
-            // Optional: Ephemeral confirmation?
-            // await interaction.followUp({ content: `✅ Saved!`, ephemeral: true });
+            // Return to appropriate page
+            if (['welcome_channel_id', 'leave_channel_id', 'log_channel_id', 'general_chat_channel_id'].includes(key)) {
+                return showSettingsPanel1(interaction);
+            } else if (key === 'auto_role_id') {
+                return showSettingsPanel3(interaction);
+            } else {
+                return showSettingsPanel2(interaction);
+            }
         }
     }
 
-    // Access Control Logic
+    // Role Access Config
     if (customId === 'admin_add_role') {
         const roleId = interaction.values[0];
         guildService.addAdminRole(interaction.guildId, roleId);
-        await showAccessPanel(interaction);
+        return showAccessPanel(interaction);
     }
     if (customId === 'admin_remove_role') {
         const roleId = interaction.values[0];
         guildService.removeAdminRole(interaction.guildId, roleId);
-        await showAccessPanel(interaction);
+        return showAccessPanel(interaction);
+    }
+
+    // Moderation Flow
+    if (customId === 'admin_mod_select') {
+        const userId = interaction.values[0];
+        return showModAction(interaction, userId);
+    }
+
+    // Mod Actions
+    if (customId.startsWith('mod_kick_')) {
+        const userId = customId.split('_')[2];
+        await interaction.guild.members.kick(userId, 'Admin Dashboard Action').catch(e =>
+            interaction.reply({ content: `Missing Permissions: ${e.message}`, ephemeral: true }));
+        await interaction.reply({ content: `✅ <@${userId}> has been Kicked!`, ephemeral: true });
+        return showModPanel(interaction); // Go back
+    }
+
+    if (customId.startsWith('mod_ban_')) {
+        const userId = customId.split('_')[2];
+        await interaction.guild.members.ban(userId, { reason: 'Admin Dashboard Action' }).catch(e =>
+            interaction.reply({ content: `Missing Permissions: ${e.message}`, ephemeral: true }));
+        await interaction.reply({ content: `✅ <@${userId}> has been Banned!`, ephemeral: true });
+        return showModPanel(interaction);
+    }
+
+    if (customId.startsWith('mod_to_')) {
+        const userId = customId.split('_')[2];
+        const member = await interaction.guild.members.fetch(userId);
+        if (member) member.timeout(60 * 60 * 1000, 'Admin Dashboard Timeout').catch(e =>
+            interaction.reply({ content: `Missing Permissions: ${e.message}`, ephemeral: true }));
+        else return interaction.reply({ content: 'Member not found', ephemeral: true });
+
+        await interaction.reply({ content: `✅ <@${userId}> has been Timeout for 1 hour!`, ephemeral: true });
+        return showModPanel(interaction);
+    }
+
+    // Text Config Buttons (Modal triggers)
+    if (customId === 'admin_edit_chk_welcome') {
+        const modal = new ModalBuilder()
+            .setCustomId('modal_edit_welcome_msg')
+            .setTitle('Edit Welcome Message');
+
+        const input = new TextInputBuilder()
+            .setCustomId('welcome_text')
+            .setLabel('Message ({user} for mention)')
+            .setStyle(TextInputStyle.Paragraph)
+            .setPlaceholder('Welcome {user} to {server}!')
+            .setRequired(true);
+
+        modal.addComponents(new ActionRowBuilder().addComponents(input));
+        await interaction.showModal(modal);
+        return; // Modal interaction ends here
     }
 }

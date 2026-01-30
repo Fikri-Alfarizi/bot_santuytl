@@ -49,14 +49,16 @@ export default {
             const { customId } = interaction;
 
             // ADMIN DASHBOARD HANDLER
-            if (customId.startsWith('admin_')) {
+            if (customId.startsWith('admin_') || customId.startsWith('mod_')) {
                 try {
                     await handleAdminInteraction(interaction);
                 } catch (error) {
                     console.error('Admin Interaction Error:', error);
                     try {
-                        await interaction.reply({ content: '❌ Terjadi kesalahan pada dashboard admin!', ephemeral: true });
-                    } catch (e) { /* ignore if already replied */ }
+                        if (!interaction.replied && !interaction.deferred) {
+                            await interaction.reply({ content: '❌ Terjadi kesalahan pada dashboard admin!', ephemeral: true });
+                        }
+                    } catch (e) { /* ignore */ }
                 }
                 return;
             }
@@ -176,7 +178,19 @@ export default {
 
         // --- MODALS ---
         else if (interaction.isModalSubmit()) {
-            if (interaction.customId.startsWith('modal_pay_')) {
+            const { customId } = interaction;
+
+            // ADMIN: Edit Welcome Message
+            if (customId === 'modal_edit_welcome_msg') {
+                const text = interaction.fields.getTextInputValue('welcome_text');
+                import('../services/guild.service.js').then(m => {
+                    m.default.updateSetting(interaction.guildId, 'welcome_message', text);
+                });
+                await interaction.reply({ content: '✅ Welcome Message updated!', ephemeral: true });
+                return;
+            }
+
+            if (customId.startsWith('modal_pay_')) {
                 const parts = interaction.customId.split('_');
                 const trxId = parts[2];
                 const pkgId = parts[3];
