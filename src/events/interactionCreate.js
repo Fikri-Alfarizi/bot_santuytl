@@ -56,7 +56,15 @@ export default {
                     console.error('Admin Interaction Error:', error);
                     try {
                         if (!interaction.replied && !interaction.deferred) {
-                            await interaction.reply({ content: '❌ Terjadi kesalahan pada dashboard admin!', ephemeral: true });
+                            await interaction.reply({
+                                content: `❌ **Error Dashboard:**\n\`\`\`${error.message}\`\`\``,
+                                ephemeral: true
+                            });
+                        } else {
+                            await interaction.followUp({
+                                content: `❌ **Error Dashboard:**\n\`\`\`${error.message}\`\`\``,
+                                ephemeral: true
+                            });
                         }
                     } catch (e) { /* ignore */ }
                 }

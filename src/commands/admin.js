@@ -328,54 +328,74 @@ export async function handleAdminInteraction(interaction) {
     const { customId } = interaction;
 
     // Navigation
-    if (customId === 'admin_home') return showDashboard(interaction, true);
-    if (customId === 'admin_close') return interaction.deleteReply();
-    if (customId === 'admin_menu_settings_1') return showSettingsPanel1(interaction);
-    if (customId === 'admin_menu_settings_2') return showSettingsPanel2(interaction);
-    if (customId === 'admin_menu_settings_3') return showSettingsPanel3(interaction);
-    if (customId === 'admin_menu_mod') return showModPanel(interaction);
-    if (customId === 'admin_menu_access') return showAccessPanel(interaction);
+    try {
+        if (customId === 'admin_home') return await showDashboard(interaction, true);
+        if (customId === 'admin_close') {
+            // Correct way to close ephemeral is to update it to essentially nothing or rely on user dismiss.
+            // deleteReply() fails on the component interaction itself. 
+            // We update the message to say "Closed" and remove components.
+            return await interaction.update({
+                content: '✅ Dashboard ditutup.',
+                embeds: [],
+                components: []
+            });
+        }
+        if (customId === 'admin_menu_settings_1') return await showSettingsPanel1(interaction);
+        if (customId === 'admin_menu_settings_2') return await showSettingsPanel2(interaction);
+        if (customId === 'admin_menu_settings_3') return await showSettingsPanel3(interaction);
+        if (customId === 'admin_menu_mod') return await showModPanel(interaction);
+        if (customId === 'admin_menu_access') return await showAccessPanel(interaction);
 
-    // Channel Settings
-    if (customId.startsWith('admin_set_')) {
-        const settingKeyMap = {
-            'admin_set_welcome': 'welcome_channel_id',
-            'admin_set_leave': 'leave_channel_id',
-            'admin_set_log': 'log_channel_id',
-            'admin_set_general': 'general_chat_channel_id',
-            'admin_set_levelup': 'levelup_channel_id',
-            'admin_set_gamesource': 'game_source_channel_id',
-            'admin_set_request': 'request_channel_id',
-            'admin_set_alarm': 'alarm_channel_id',
-            'admin_set_autorole': 'auto_role_id'
-        };
+        // Channel Settings
+        if (customId.startsWith('admin_set_')) {
+            const settingKeyMap = {
+                'admin_set_welcome': 'welcome_channel_id',
+                'admin_set_leave': 'leave_channel_id',
+                'admin_set_log': 'log_channel_id',
+                'admin_set_general': 'general_chat_channel_id',
+                'admin_set_levelup': 'levelup_channel_id',
+                'admin_set_gamesource': 'game_source_channel_id',
+                'admin_set_request': 'request_channel_id',
+                'admin_set_alarm': 'alarm_channel_id',
+                'admin_set_autorole': 'auto_role_id'
+            };
 
-        const key = settingKeyMap[customId];
-        if (key) {
-            const value = interaction.values[0];
-            guildService.updateSetting(interaction.guildId, key, value);
+            const key = settingKeyMap[customId];
+            if (key) {
+                if (!interaction.values || interaction.values.length === 0) {
+                    // Should not happen for select menu, but safe guard
+                    throw new Error("No option selected");
+                }
+                const value = interaction.values[0];
 
-            // Return to appropriate page
-            if (['welcome_channel_id', 'leave_channel_id', 'log_channel_id', 'general_chat_channel_id'].includes(key)) {
-                return showSettingsPanel1(interaction);
-            } else if (key === 'auto_role_id') {
-                return showSettingsPanel3(interaction);
-            } else {
-                return showSettingsPanel2(interaction);
+                // Perform DB Update
+                guildService.updateSetting(interaction.guildId, key, value);
+
+                // Return to appropriate page
+                if (['welcome_channel_id', 'leave_channel_id', 'log_channel_id', 'general_chat_channel_id'].includes(key)) {
+                    return await showSettingsPanel1(interaction);
+                } else if (key === 'auto_role_id') {
+                    return await showSettingsPanel3(interaction);
+                } else {
+                    return await showSettingsPanel2(interaction);
+                }
             }
         }
-    }
 
-    // Role Access Config
-    if (customId === 'admin_add_role') {
-        const roleId = interaction.values[0];
-        guildService.addAdminRole(interaction.guildId, roleId);
-        return showAccessPanel(interaction);
-    }
-    if (customId === 'admin_remove_role') {
-        const roleId = interaction.values[0];
-        guildService.removeAdminRole(interaction.guildId, roleId);
-        return showAccessPanel(interaction);
+        // Role Access Config
+        if (customId === 'admin_add_role') {
+            const roleId = interaction.values[0];
+            guildService.addAdminRole(interaction.guildId, roleId);
+            return await showAccessPanel(interaction);
+        }
+        if (customId === 'admin_remove_role') {
+            const roleId = interaction.values[0];
+            guildService.removeAdminRole(interaction.guildId, roleId);
+            return await showAccessPanel(interaction);
+        }
+    } catch (innerError) {
+        console.error("Inner Admin Logic Error:", innerError);
+        throw innerError; // Re-throw to be caught by interactionCreate
     }
 
     // Moderation Flow
