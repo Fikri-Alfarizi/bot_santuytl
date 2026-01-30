@@ -19,8 +19,11 @@ export const data = new SlashCommandBuilder()
             .addRoleOption(opt => opt.setName('role').setDescription('Role yang dikasih').setRequired(true)))
     .addSubcommand(sub =>
         sub.setName('gamesource')
-            .setDescription('Set channel sumber Game Premium (untuk /spin)')
+            .setDescription('Set channel sumber Game (untuk /spin dan /game)')
             .addChannelOption(opt => opt.setName('channel').setDescription('Channel sumber game').setRequired(true)))
+    .addSubcommand(sub =>
+        sub.setName('refresh-games')
+            .setDescription('🔄 Paksa refresh data game dari channel (jika pencarian kosong)'))
     .addSubcommand(sub =>
         sub.setName('request')
             .setDescription('Set channel tempat user request game')
@@ -73,7 +76,28 @@ export async function execute(interaction) {
     else if (subcommand === 'gamesource') {
         const channel = interaction.options.getChannel('channel');
         guildService.updateSetting(guildId, 'game_source_channel_id', channel.id);
-        await interaction.reply(`✅ **Game Source** berhasil diset ke ${channel}.\nBot akan mengambil stok game dari chat di channel tersebut untuk fitur \`/spin\`.`);
+
+        // Auto trigger sync setelah set channel
+        await interaction.deferReply();
+        const count = await import('../services/game.service.js').then(m => m.default.syncGamesFromChannel(interaction.client, guildId));
+
+        await interaction.editReply(`✅ **Game Source** berhasil diset ke ${channel}.\nSukses sync **${count} games** ke database! Sekarang command \`/game\` dan \`/spin\` akan pakai channel ini.`);
+    }
+    else if (subcommand === 'refresh-games') {
+        await interaction.deferReply();
+        try {
+            const gameService = await import('../services/game.service.js').then(m => m.default);
+            const count = await gameService.syncGamesFromChannel(interaction.client, guildId);
+
+            if (count === 0) {
+                await interaction.editReply('⚠️ **Hasil Sync 0 Game!**\nPastikan:\n1. Sudah set `/settings gamesource`\n2. Channel berisi teks (bukan cuma gambar)\n3. Bot punya akses baca channel itu');
+            } else {
+                await interaction.editReply(`✅ **Refresh Sukses!**\nBerhasil mengambil **${count} games** baru dari channel source.`);
+            }
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply('❌ **Gagal sync!** Cek logs console.');
+        }
     }
     else if (subcommand === 'request') {
         const channel = interaction.options.getChannel('channel');
