@@ -18,6 +18,10 @@ export const data = new SlashCommandBuilder()
             .setDescription('Set auto role saat member join')
             .addRoleOption(opt => opt.setName('role').setDescription('Role yang dikasih').setRequired(true)))
     .addSubcommand(sub =>
+        sub.setName('levelup')
+            .setDescription('Set channel notifikasi Level Up & Coins (biar gak spam chat)')
+            .addChannelOption(opt => opt.setName('channel').setDescription('Channel tujuan notifikasi').setRequired(true)))
+    .addSubcommand(sub =>
         sub.setName('gamesource')
             .setDescription('Set channel sumber Game (untuk /spin dan /game)')
             .addChannelOption(opt => opt.setName('channel').setDescription('Channel sumber game').setRequired(true)))
@@ -72,6 +76,11 @@ export async function execute(interaction) {
         const role = interaction.options.getRole('role');
         guildService.updateSetting(guildId, 'auto_role_id', role.id);
         await interaction.reply(`✅ **Auto Role** berhasil diset ke **${role.name}**`);
+    }
+    else if (subcommand === 'levelup') {
+        const channel = interaction.options.getChannel('channel');
+        guildService.updateSetting(guildId, 'levelup_channel_id', channel.id);
+        await interaction.reply(`✅ **Level Up & Reward Channel** berhasil diset ke ${channel}.\nNotifikasi level up dan coins akan dikirim ke sana agar tidak mengganggu chat!`);
     }
     else if (subcommand === 'gamesource') {
         const channel = interaction.options.getChannel('channel');

@@ -60,7 +60,8 @@ const columnsToAdd = [
     { name: 'news_channel_id', sql: "ALTER TABLE guild_settings ADD COLUMN news_channel_id TEXT" },
     { name: 'general_chat_channel_id', sql: "ALTER TABLE guild_settings ADD COLUMN general_chat_channel_id TEXT" },
     { name: 'alarm_channel_id', sql: "ALTER TABLE guild_settings ADD COLUMN alarm_channel_id TEXT" },
-    { name: 'alarm_schedule', sql: "ALTER TABLE guild_settings ADD COLUMN alarm_schedule TEXT DEFAULT '07:00'" }
+    { name: 'alarm_schedule', sql: "ALTER TABLE guild_settings ADD COLUMN alarm_schedule TEXT DEFAULT '07:00'" },
+    { name: 'levelup_channel_id', sql: "ALTER TABLE guild_settings ADD COLUMN levelup_channel_id TEXT" }
 ];
 
 columnsToAdd.forEach(({ name, sql }) => {

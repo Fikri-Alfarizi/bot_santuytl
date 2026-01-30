@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Events, PermissionFlagsBits } from 'discord.js';
 import userService from '../services/user.service.js';
+import guildService from '../services/guild.service.js';
 import { logSystem } from '../utils/auditLogger.js';
 import { askGemini } from '../services/gemini.service.js';
 import trustService from '../services/trust.service.js';
@@ -16,7 +17,6 @@ export default {
 
         // --- 🔍 TRUST SCORE OBSERVER ---
         // Monitor for spam/flooding behavior and deduct trust score passively
-        // Note: Real penalty logic is inside trustService.observeUserBehavior, we just report events here.
         if (message.mentions.users.size > 5) {
             trustService.observeUserBehavior(message.author.id, 'spam'); // Mass mention
         }
@@ -30,13 +30,9 @@ export default {
                 // Check if the reply target is Me (The Bot)
                 if (repliedMessage.author.id === message.client.user.id) {
                     await message.channel.sendTyping();
-
-                    // Simple "context": Just sending the new query for now
-                    // Improvement: We could send "Previous: [BotMsg] Current: [UserMsg]" to prompt
                     const response = await askGemini(message.author.username, message.content);
-
                     await message.reply(response);
-                    return; // Stop processing other logic (spam/xp) for AI chats? Optional.
+                    return; // Stop processing other logic for AI chats
                 }
             } catch (error) {
                 console.error('Error handling reply context:', error);
@@ -124,7 +120,7 @@ export default {
             });
         }
 
-        // --- EXISTING XP & COIN LOGIC ---
+        // --- XP & COIN REWARD LOGIC ---
         const WEBHOOK_URL = process.env.WEBHOOK_URL;
         const WEBHOOK_SECRET = process.env.DISCORD_BOT_SECRET;
         const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://127.0.0.1:8000';
@@ -151,11 +147,30 @@ export default {
                 // Add Coins Locally
                 userService.addCoins(message.author.id, message.author.username, coinsToAdd);
 
-                // 💸 CHAT REWARD NOTIFICATION
-                // Reply to user to notify reward (will appear in their notification tag)
-                message.reply(`💸 **Caching!** Kamu dapet **${coinsToAdd} coins** dari aktif ngechat!`)
-                    .then(msg => setTimeout(() => msg.delete(), 10000)) // Auto delete after 10s to reduce spam
-                    .catch(() => { });
+                // Get Guild Settings for Notification Channel
+                const settings = guildService.getSettings(message.guild.id);
+                const notificationChannelId = settings?.levelup_channel_id;
+
+                const coinMsg = `💸 **Caching!** Kamu dapet **${coinsToAdd} coins** dari aktif ngechat!`;
+
+                // Handle Notification
+                if (notificationChannelId) {
+                    // Send to specific channel
+                    try {
+                        const notifChannel = await message.guild.channels.fetch(notificationChannelId);
+                        if (notifChannel && notifChannel.isTextBased()) {
+                            // Don't tag, just link to user
+                            await notifChannel.send(`${message.author} (\`${message.author.username}\`) ${coinMsg} in <#${message.channel.id}>`);
+                        }
+                    } catch (e) {
+                        // If channel invalid, ignore or fallback? Let's ignore to strictly follow setting
+                    }
+                } else {
+                    // Default: Reply to user (auto delete)
+                    message.reply(coinMsg)
+                        .then(msg => setTimeout(() => msg.delete(), 10000)) // Auto delete after 10s
+                        .catch(() => { });
+                }
 
                 // Add XP Locally
                 const result = userService.addXp(message.author.id, message.author.username, xpToAdd);
@@ -167,7 +182,17 @@ export default {
                         color: 0xFF00FF, // Neon Purple
                         thumbnail: { url: message.author.displayAvatarURL({ dynamic: true }) }
                     };
-                    message.channel.send({ content: `Congrats ${message.author}! 🎉`, embeds: [levelEmbed] });
+
+                    if (notificationChannelId) {
+                        try {
+                            const notifChannel = await message.guild.channels.fetch(notificationChannelId);
+                            if (notifChannel && notifChannel.isTextBased()) {
+                                await notifChannel.send({ content: `Congrats ${message.author}! 🎉`, embeds: [levelEmbed] });
+                            }
+                        } catch (e) { }
+                    } else {
+                        message.channel.send({ content: `Congrats ${message.author}! 🎉`, embeds: [levelEmbed] });
+                    }
                 }
 
             } catch (error) {
