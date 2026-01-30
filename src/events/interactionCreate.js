@@ -10,7 +10,8 @@ import {
 } from 'discord.js';
 import userService from '../services/user.service.js';
 import { getPackageById } from '../economy/topup.config.js';
-import { logEconomy, logSystem } from '../utils/auditLogger.js';
+import { logEconomy } from '../utils/auditLogger.js';
+import { handleAdminInteraction } from '../commands/admin.js';
 
 export default {
     name: 'interactionCreate',
@@ -43,9 +44,22 @@ export default {
             }
         }
 
-        // --- BUTTONS ---
-        else if (interaction.isButton()) {
+        // --- BUTTONS & SELECT MENUS ---
+        else if (interaction.isMessageComponent()) {
             const { customId } = interaction;
+
+            // ADMIN DASHBOARD HANDLER
+            if (customId.startsWith('admin_')) {
+                try {
+                    await handleAdminInteraction(interaction);
+                } catch (error) {
+                    console.error('Admin Interaction Error:', error);
+                    try {
+                        await interaction.reply({ content: '❌ Terjadi kesalahan pada dashboard admin!', ephemeral: true });
+                    } catch (e) { /* ignore if already replied */ }
+                }
+                return;
+            }
 
             // TOPUP: Confirm Payment -> Show Modal
             if (customId.startsWith('confirm_pay_')) {
