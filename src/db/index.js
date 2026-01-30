@@ -76,6 +76,25 @@ columnsToAdd.forEach(({ name, sql }) => {
     }
 });
 
+// Games Cache Table for /game autocomplete search
+db.exec(`
+    CREATE TABLE IF NOT EXISTS games_cache (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id TEXT NOT NULL,
+        message_id TEXT UNIQUE,
+        title TEXT NOT NULL,
+        content TEXT,
+        link TEXT,
+        image_url TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now'))
+    )
+`);
+
+// Create index for faster search
+try {
+    db.exec("CREATE INDEX IF NOT EXISTS idx_games_title ON games_cache(guild_id, title)");
+} catch (e) { /* Index exists */ }
+
 // News History to prevent duplicates
 db.exec(`
     CREATE TABLE IF NOT EXISTS news_history (

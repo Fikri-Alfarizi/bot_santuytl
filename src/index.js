@@ -10,6 +10,7 @@ import { distributePassiveIncome } from './cron/passiveIncome.js';
 import { sendDailyAlarm } from './cron/dailyAlarm.js';
 import { startPresence } from './utils/presence.js';
 import { runAutoChat } from './services/autochat.service.js';
+import gameService from './services/game.service.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -71,10 +72,20 @@ client.once('ready', async () => {
         timezone: 'Asia/Jakarta'
     });
 
+    // --- GAME CACHE SYNC ---
+    // Sync on startup
+    await gameService.syncAllGuilds(client);
+
+    // Re-sync every hour
+    cron.schedule('0 * * * *', () => {
+        gameService.syncAllGuilds(client);
+    });
+
     console.log('📰 News Feed System: ACTIVE');
     console.log('💰 Passive Income System: ACTIVE (60 coins/min ≈ 1 RP/sec for online users)');
     console.log('🤖 Gemini Auto-Chat: ACTIVE (07:00, 12:00, 15:00, 21:00)');
     console.log('🔔 Daily Alarm: ACTIVE (07:00 Asia/Jakarta)');
+    console.log('🎮 Game Search: ACTIVE (Sync every hour)');
 });
 
 // Initialize Discord Bot

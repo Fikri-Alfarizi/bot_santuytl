@@ -15,6 +15,19 @@ import { logEconomy, logSystem } from '../utils/auditLogger.js';
 export default {
     name: 'interactionCreate',
     async execute(interaction) {
+        // --- AUTOCOMPLETE (for /game search) ---
+        if (interaction.isAutocomplete()) {
+            const command = interaction.client.commands.get(interaction.commandName);
+            if (!command || !command.autocomplete) return;
+
+            try {
+                await command.autocomplete(interaction);
+            } catch (error) {
+                console.error('Autocomplete error:', error);
+            }
+            return;
+        }
+
         // --- CHAT COMMANDS ---
         if (interaction.isChatInputCommand()) {
             const command = interaction.client.commands.get(interaction.commandName);
