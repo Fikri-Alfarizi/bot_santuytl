@@ -3,7 +3,7 @@ import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, But
 export const data = new SlashCommandBuilder()
     .setName('rolepanel')
     .setDescription('🎨 Manage Role Panels (Take Role)')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
+    // .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles) // Disabled for visibility debugging
     .addSubcommand(sub =>
         sub.setName('create')
             .setDescription('Create a new role panel embed')
@@ -29,6 +29,11 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
+
+    // Manual Permission Check (untuk memastikan command muncul dulu, tapi tetap aman)
+    if (!interaction.member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+        return interaction.reply({ content: '🚫 Kamu butuh permission **Manage Roles** untuk pakai ini!', ephemeral: true });
+    }
 
     if (subcommand === 'create') {
         const title = interaction.options.getString('title');
