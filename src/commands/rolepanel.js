@@ -44,9 +44,11 @@ export async function execute(interaction) {
         if (subcommand === 'create') {
             const title = interaction.options.getString('title');
             const description = interaction.options.getString('description');
-            const image = interaction.options.getString('image');
+            let image = interaction.options.getString('image');
             const footer = interaction.options.getString('footer');
             let colorInput = interaction.options.getString('color') || '#2B2D31';
+
+            if (image) image = image.trim();
 
             // Sanitize Color Input (Remove quotes if user pasted them)
             colorInput = colorInput.replace(/['"]/g, '').trim();
