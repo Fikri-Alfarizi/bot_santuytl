@@ -45,6 +45,7 @@ export async function execute(interaction) {
             const title = interaction.options.getString('title');
             const description = interaction.options.getString('description');
             const image = interaction.options.getString('image');
+            const footer = interaction.options.getString('footer');
             let colorInput = interaction.options.getString('color') || '#2B2D31';
 
             // Sanitize Color Input (Remove quotes if user pasted them)
