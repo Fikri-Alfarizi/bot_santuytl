@@ -48,6 +48,37 @@ export default {
         else if (interaction.isMessageComponent()) {
             const { customId } = interaction;
 
+            // ROLE PANEL TOGGLE
+            if (customId.startsWith('role_toggle_')) {
+                const roleId = customId.split('role_toggle_')[1];
+                const role = interaction.guild.roles.cache.get(roleId);
+
+                if (!role) {
+                    return interaction.reply({ content: '❌ Role not found (maybe deleted?).', ephemeral: true });
+                }
+
+                // Check Bot Permission (in case role hierarchy changed)
+                if (!role.editable) {
+                    return interaction.reply({ content: '❌ **I cannot manage this role!** It might be higher than my role.', ephemeral: true });
+                }
+
+                const member = interaction.member;
+                const hasRole = member.roles.cache.has(roleId);
+
+                try {
+                    if (hasRole) {
+                        await member.roles.remove(role);
+                        return interaction.reply({ content: `🗑️ Role **${role.name}** dilepas.`, ephemeral: true });
+                    } else {
+                        await member.roles.add(role);
+                        return interaction.reply({ content: `✅ Role **${role.name}** berhasil diambil!`, ephemeral: true });
+                    }
+                } catch (error) {
+                    console.error('Role Toggle Error:', error);
+                    return interaction.reply({ content: `❌ Error changing role: ${error.message}`, ephemeral: true });
+                }
+            }
+
             // ADMIN DASHBOARD HANDLER
             if (customId.startsWith('admin_') || customId.startsWith('mod_')) {
                 try {
