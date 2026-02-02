@@ -132,8 +132,16 @@ export async function execute(interaction) {
         }
     } catch (error) {
         console.error('RolePanel Error:', error);
+
+        let errorMessage = `❌ **Terjadi Error:**\n\`${error.message}\``;
+
+        // Custom Error Message untuk Emoji
+        if (error.message.includes('Invalid emoji')) {
+            errorMessage = '❌ **Emoji Tidak Valid!**\nJangan pakai kode text (seperti `:gem:`). Gunakan **Emoji Asli** (💎).\n\n*Tips: Tekan `Windows + .` (Titik) untuk membuka panel emoji.*';
+        }
+
         return interaction.reply({
-            content: `❌ **Terjadi Error:**\n\`${error.message}\``,
+            content: errorMessage,
             ephemeral: true
         });
     }
