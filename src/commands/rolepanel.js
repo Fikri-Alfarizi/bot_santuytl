@@ -45,8 +45,17 @@ export async function execute(interaction) {
             const title = interaction.options.getString('title');
             const description = interaction.options.getString('description');
             const image = interaction.options.getString('image');
-            const color = interaction.options.getString('color') || '#2B2D31'; // Default Discord Dark
-            const footer = interaction.options.getString('footer');
+            let colorInput = interaction.options.getString('color') || '#2B2D31';
+
+            // Sanitize Color Input (Remove quotes if user pasted them)
+            colorInput = colorInput.replace(/['"]/g, '').trim();
+            // Ensure hash prefix
+            if (!colorInput.startsWith('#') && /^[0-9A-F]{6}$/i.test(colorInput)) {
+                colorInput = `#${colorInput}`;
+            }
+
+            // Final validation (Fallback to default if invalid)
+            const color = /^#[0-9A-F]{6}$/i.test(colorInput) ? colorInput : '#2B2D31';
 
             const embed = new EmbedBuilder()
                 .setTitle(title)
