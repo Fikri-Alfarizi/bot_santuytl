@@ -60,7 +60,7 @@ export async function execute(interaction) {
     const settings = guildService.getSettings(guildId);
     if (!settings || !settings.game_source_channel_id) {
         return interaction.reply({
-            content: '❌ **Admin belum setup sumber game!**\nMinta admin ketik `/settings gamesource <channel>` dulu.',
+            content: '❌ **Admin belum setup sumber game!**\nMinta admin buka dashboard `/admin` -> `Settings (Features)` -> Set `Game Premium Source`.',
             ephemeral: true
         });
     }
