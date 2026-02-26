@@ -90,7 +90,7 @@ async function handleSpin(interaction, mode) {
         }
 
         // Consume Ticket
-        inventoryService.removeItem(userId, 'premium_spin_ticket');
+        inventoryService.useItem(userId, 'premium_spin_ticket');
     }
 
     // 3. Fetch Games

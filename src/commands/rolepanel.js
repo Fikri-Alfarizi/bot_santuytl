@@ -31,13 +31,46 @@ export async function execute(interaction) {
     try {
         const subcommand = interaction.options.getSubcommand();
 
-        // Safety check for DM or missing member
-        if (!interaction.guild || !interaction.member) {
+        // 1. Check if in guild (User Apps support)
+        if (!interaction.inGuild()) {
             return interaction.reply({ content: '❌ Command ini hanya bisa digunakan di dalam Server.', ephemeral: true });
         }
 
-        // Manual Permission Check
-        if (!interaction.member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+        // 2. Resolve Guild (Handle Uncached)
+        let guild = interaction.guild;
+        if (!guild) {
+            try {
+                guild = await interaction.client.guilds.fetch(interaction.guildId);
+            } catch (e) {
+                console.error('Guild Fetch Error:', e);
+                return interaction.reply({ content: '❌ Error: Gagal memuat data Server via API.', ephemeral: true });
+            }
+        }
+
+        // 3. Resolve Member (Handle Uncached / Raw API Object)
+        let member = interaction.member;
+        if (!member || !member.permissions || typeof member.permissions.has !== 'function') {
+            try {
+                member = await guild.members.fetch(interaction.user.id);
+            } catch (e) {
+                console.error('Member Fetch Error:', e);
+                return interaction.reply({ content: '❌ Error: Gagal memuat data Member di server ini.', ephemeral: true });
+            }
+        }
+
+        // 4. Resolve Channel (Handle Uncached)
+        let channel = interaction.channel;
+        if (!channel) {
+            try {
+                channel = await guild.channels.fetch(interaction.channelId);
+            } catch (e) {
+                console.error('Channel Fetch Error:', e);
+                return interaction.reply({ content: '❌ Error: Gagal memuat data Channel.', ephemeral: true });
+            }
+        }
+
+        // Manual Permission Check (Using resolved member)
+        if (!member.permissions.has(PermissionFlagsBits.ManageRoles)) {
             return interaction.reply({ content: '🚫 Kamu butuh permission **Manage Roles** untuk pakai ini!', ephemeral: true });
         }
 
@@ -72,13 +105,13 @@ export async function execute(interaction) {
 
             if (footer) embed.setFooter({ text: footer });
 
-            await interaction.channel.send({ embeds: [embed] });
+            await channel.send({ embeds: [embed] });
             return interaction.reply({ content: '✅ **Panel Created!**\nUse `/rolepanel add` to add role buttons to it.', ephemeral: true });
         }
 
         if (subcommand === 'add') {
             // Fetch last message from bot
-            const messages = await interaction.channel.messages.fetch({ limit: 10 });
+            const messages = await channel.messages.fetch({ limit: 10 });
             const targetMsg = messages.find(m => m.author.id === interaction.client.user.id && m.embeds.length > 0);
 
             if (!targetMsg) {
@@ -91,8 +124,18 @@ export async function execute(interaction) {
             const styleStr = interaction.options.getString('style') || 'Secondary';
             const style = ButtonStyle[styleStr];
 
+            // Resolve Bot Member for Role Hierarchy Check
+            let botMember = guild.members.me;
+            if (!botMember) {
+                try {
+                    botMember = await guild.members.fetchMe();
+                } catch (e) {
+                    return interaction.reply({ content: '❌ Gagal memeriksa role bot.', ephemeral: true });
+                }
+            }
+
             // Validate Role Position (Safety)
-            if (role.position >= interaction.guild.members.me.roles.highest.position) {
+            if (role.position >= botMember.roles.highest.position) {
                 return interaction.reply({ content: '❌ **Role too high!** I cannot assign a role higher than my own role.', ephemeral: true });
             }
 
