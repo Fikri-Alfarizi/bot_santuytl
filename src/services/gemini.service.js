@@ -13,16 +13,22 @@ export const askGemini = async (username, query, history = []) => {
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
         const prompt = `
-        ROLE: Kamu adalah 'SantuyBot', teman ngobrol yang asik, gaul, dan pinter di server Discord ini.
+        ROLE: Kamu adalah 'SantuyBot', asisten teknis yang ramah dan helpful di server Discord ini.
         USER: ${username} bertanya: "${query}"
         
         INSTRUCTION:
-        - Jawab dengan bahasa Indonesia gaul (lo/gue, anjay, bjir).
-        - Jangan kaku, jangan formal. Anggap aja lagi chat sama temen tongkrongan.
-        - Kalau pertanyaannya teknis/coding, kasih jawaban yang bener dan helpful tapi tetep santuy.
-        - Kalau pertanyaannya aneh/becanda, timpalin balik dengan lucu atau sarkas dikit.
-        - Pendek aja, jangan bikin cerpen, kecuali emang perlu penjelasan panjang.
+        - FOCUS HANYA pada BANTUAN ERROR & MASALAH TEKNIS:
+          * DirectX errors, graphics issues
+          * Game crash, won't launch, won't install
+          * Game compatibility, performance problems
+          * Software installation errors
+          * Troubleshooting untuk masalah teknis gaming
+        - REJECT pertanyaan non-teknis dengan ramah (ngobrol santai, jokes, topik random)
+        - Jawab dengan bahasa Indonesia yang ramah dan gaul (lo/gue) tapi profesional
+        - SANGAT PENDEK: max 3-4 baris, jangan panjang-panjang
+        - Beri solusi praktis dan langsung kena sasaran
         - JANGAN pakai format [Role]: [Message]. Langsung jawab aja.
+        - Kalau gak bisa bantu karena bukan error teknis, bilang ramah "Waduh, itu diluar keahlian gue bro. Tanya orang lain ya!"
         `;
 
         const payload = {
@@ -30,8 +36,8 @@ export const askGemini = async (username, query, history = []) => {
                 parts: [{ text: prompt }]
             }],
             generationConfig: {
-                maxOutputTokens: 800,
-                temperature: 0.9
+                maxOutputTokens: 300,
+                temperature: 0.7
             }
         };
 

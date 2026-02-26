@@ -11,7 +11,7 @@ export async function generateDailyTopic() {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const prompt = "Buatkan satu topik obrolan yang seru, lucu, atau menarik untuk komunitas Discord gamer dan teknologi. Gunakan bahasa Indonesia gaul yang santai. Ajak member untuk berdiskusi pendek. Jangan terlalu panjang, maksimal 2-3 kalimat.";
+        const prompt = "Buatkan satu pertanyaan atau ajakan singkat untuk meminta member berbagi masalah teknis mereka (error game, crash, installation issues, DirectX problems, dll). Gunakan bahasa Indonesia yang ramah dan casual. Maksimal 2 kalimat, tidak panjang."
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
