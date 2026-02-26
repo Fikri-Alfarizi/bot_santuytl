@@ -60,6 +60,7 @@ export const askGemini = async (username, query, history = []) => {
         console.error('⚠️ Gemini API Error:', error.response ? error.response.data : error.message);
 
         const errMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+        const statusCode = error.response?.status;
 
         if (errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED')) {
             return "Waduh, kebanyakan mikir nih gue (Quota Limit). Tunggu bentar yak! ⏳";
@@ -69,6 +70,12 @@ export const askGemini = async (username, query, history = []) => {
         }
         if (errMsg.includes('404')) {
             return "Modelnya gak ketemu bro (404). Mungkin salah versi API. 🤕";
+        }
+        if (statusCode === 503 || errMsg.includes('503') || errMsg.includes('Service Unavailable')) {
+            return "Server Gemini lagi sibuk banget bro. Coba lagi nanti ya! 🔄";
+        }
+        if (statusCode >= 500 || errMsg.includes('500') || errMsg.includes('502')) {
+            return "Gemini server lagi maintenance. Sabar sebentar yak! 🔧";
         }
 
         return `Aduh, otak gue lagi korslet. Error: ${error.message} 🤕`;

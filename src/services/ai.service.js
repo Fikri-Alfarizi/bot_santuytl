@@ -18,6 +18,16 @@ export async function generateDailyTopic() {
         return response.text();
     } catch (error) {
         console.error('Error generating AI topic:', error.message);
-        return null;
+        
+        // Provide fallback messages during API issues
+        const fallbackMessages = [
+            "Ada yang lagi error pas install game? Yuk cerita, gue bantu! 🎮",
+            "Game crash terus? DirectX eror? Share di sini, biar bisa gue bantu! 🔧",
+            "Punya masalah teknis gaming? Jangan ragu tanya di sini ya! 💻",
+            "Ada yang perlu bantuan troubleshooting game? Gue siap kok! ⚙️"
+        ];
+        
+        const randomFallback = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+        return randomFallback;
     }
 }
