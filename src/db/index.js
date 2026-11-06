@@ -1,15 +1,50 @@
-import Database from 'better-sqlite3';
+import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import fs from 'fs';
 
 // Ensure data directory exists
 const dataDir = path.resolve('data');
 if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir);
+    fs.mkdirSync(dataDir, { recursive: true });
 }
 
 const dbPath = path.join(dataDir, 'santuy.db');
-const db = new Database(dbPath/*, { verbose: console.log }*/);
+const rawDb = new DatabaseSync(dbPath);
+
+// Lightweight wrapper to maintain complete 100% compatibility with better-sqlite3 API
+class DatabaseWrapper {
+    constructor(db) {
+        this.db = db;
+    }
+
+    exec(sql) {
+        return this.db.exec(sql);
+    }
+
+    prepare(sql) {
+        const stmt = this.db.prepare(sql);
+        return {
+            run: (...args) => {
+                const params = (args.length === 1 && Array.isArray(args[0])) ? args[0] : args;
+                const result = stmt.run(...params);
+                return {
+                    changes: result.changes,
+                    lastInsertRowid: result.lastInsertRowid
+                };
+            },
+            get: (...args) => {
+                const params = (args.length === 1 && Array.isArray(args[0])) ? args[0] : args;
+                return stmt.get(...params);
+            },
+            all: (...args) => {
+                const params = (args.length === 1 && Array.isArray(args[0])) ? args[0] : args;
+                return stmt.all(...params);
+            }
+        };
+    }
+}
+
+const db = new DatabaseWrapper(rawDb);
 
 // Initialize tables
 db.exec(`
@@ -70,7 +105,7 @@ columnsToAdd.forEach(({ name, sql }) => {
         db.exec(sql);
         console.log(`✅ Migration: Added column '${name}' to guild_settings`);
     } catch (e) {
-        if (e.message.includes('duplicate column name')) {
+        if (e.message && (e.message.includes('duplicate column name') || e.message.includes('already exists'))) {
             // Column already exists, this is okay
         } else {
             console.error(`❌ Migration error for column '${name}':`, e.message);
